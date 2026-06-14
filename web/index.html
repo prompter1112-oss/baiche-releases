@@ -1,0 +1,2187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>掰扯 · 知识库语音对谈</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Noto+Sans+SC:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      /* ElevenLabs editorial — inverted (dark) variant */
+      --canvas: #0c0a09;
+      --canvas-soft: #131110;
+      --card: #1c1917;
+      --surface-strong: #242120;
+      --ink: #f5f4f1;
+      --body: #c2bdb4;
+      --muted: #8f897f;
+      --muted-soft: #6b655c;
+      --hairline: rgba(255,255,255,0.09);
+      --hairline-strong: rgba(255,255,255,0.17);
+      --primary: #f5f4f1;        /* CTA pill inverts to off-white */
+      --primary-active: #e6e3dd;
+      --on-primary: #0c0a09;
+      /* atmospheric gradient stops — the only color (glow on dark) */
+      --g-mint: #a7e5d3;
+      --g-peach: #f4c5a8;
+      --g-lavender: #c8b8e0;
+      --g-sky: #a8c8e8;
+      --g-rose: #e8b8c4;
+      --serif: "Noto Serif SC", "EB Garamond", "Songti SC", serif;
+      --sans: "Inter", "Noto Sans SC", -apple-system, "PingFang SC", system-ui, sans-serif;
+      --shadow: 0 10px 34px rgba(0,0,0,0.5);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      color: var(--ink); background: var(--canvas);
+      font-family: var(--sans); letter-spacing: 0.16px;
+      display: flex; flex-direction: column; height: 100vh;
+      position: relative; overflow: hidden;
+    }
+    /* drifting pastel atmospheric orbs — pure background brand voltage */
+    body::before, body::after {
+      content: ""; position: fixed; pointer-events: none; z-index: 0;
+      width: 60vw; height: 60vw; border-radius: 50%; filter: blur(80px); opacity: 0.35;
+    }
+    body::before {
+      top: -22vw; left: -12vw;
+      background: radial-gradient(circle at 50% 50%, var(--g-peach), transparent 62%);
+      animation: drift1 26s ease-in-out infinite;
+    }
+    body::after {
+      bottom: -26vw; right: -14vw;
+      background: radial-gradient(circle at 50% 50%, var(--g-sky), transparent 62%);
+      animation: drift2 32s ease-in-out infinite;
+    }
+    @keyframes drift1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(6vw,4vw) scale(1.1); } }
+    @keyframes drift2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-5vw,-3vw) scale(1.08); } }
+    header, #log, .console { position: relative; z-index: 1; }
+
+    header {
+      padding: 16px 28px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      border-bottom: 1px solid var(--hairline); background: rgba(12,10,9,0.55);
+      backdrop-filter: blur(8px);
+    }
+    .head-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .oneonone { display: flex; align-items: center; gap: 10px; }
+    .oneonone.hide { display: none; }
+    .duoonly { display: flex; align-items: center; gap: 8px; }
+    .duoonly.hide { display: none; }
+    header h1 { margin: 0; display: inline-flex; align-items: center; line-height: 0; }
+    header h1 svg { height: 30px; width: auto; display: block; }
+    header h1 .wm-fill { fill: var(--ink); }
+    header .sub { color: var(--muted); font-size: 12px; font-weight: 600; letter-spacing: 0.96px; text-transform: uppercase; }
+    header .sub b { color: var(--ink); font-weight: 600; }
+    header .partner { color: var(--muted); font-size: 12px; letter-spacing: .3px; display: flex; align-items: center; gap: 8px; }
+    header .partner input {
+      width: 84px; background: var(--card); border: 1px solid var(--hairline-strong); color: var(--ink);
+      border-radius: 8px; padding: 7px 11px; font-size: 14px; font-family: var(--serif); outline: none;
+      transition: border-color .2s;
+    }
+    header .partner input:focus { border-color: var(--ink); }
+    header .voice {
+      color: var(--ink); font-size: 14px; font-family: var(--sans); cursor: pointer; outline: none;
+      border: 1px solid var(--hairline-strong); border-radius: 9999px; padding: 8px 30px 8px 14px;
+      background-color: var(--card); appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23f5f4f1' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 13px center;
+    }
+    header .voice:focus { border-color: var(--ink); }
+    header .voice option { background: #1c1917; color: #f5f4f1; }
+    header .try-voice {
+      width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
+      border: 1px solid var(--hairline-strong); background: var(--card); color: var(--ink);
+      font-size: 11px; display: grid; place-items: center; transition: background .2s, transform .15s;
+    }
+    header .try-voice:hover:not(:disabled) { background: var(--surface-strong); }
+    header .try-voice:active { transform: scale(.9); }
+    header .try-voice:disabled { opacity: .5; cursor: wait; }
+    header .voice.kb { max-width: 240px; }
+    header .try-voice#kbAdd { font-size: 17px; font-weight: 300; }
+    header .try-voice#settingsBtn { width: 36px; height: 36px; }
+    header .try-voice#settingsBtn svg { width: 19px; height: 19px; display: block; }
+    header .try-voice#voiceOutBtn { font-size: 18px; }
+    /* add-knowledge-base panel */
+    .kb-panel {
+      position: absolute; z-index: 5; top: 64px; left: 32px; display: none;
+      animation: rise .25s ease both;
+    }
+    .kb-panel.open { display: block; }
+    .kb-panel-inner {
+      width: 440px; max-width: 88vw; background: var(--card); border: 1px solid var(--hairline-strong);
+      border-radius: 16px; box-shadow: var(--shadow); padding: 20px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .kb-panel-title { font-family: var(--serif); font-size: 17px; font-weight: 300; color: var(--ink); margin-bottom: 2px; }
+    .kb-panel input {
+      background: var(--canvas-soft); border: 1px solid var(--hairline-strong); color: var(--ink);
+      border-radius: 8px; padding: 10px 12px; font-size: 14px; font-family: var(--sans); outline: none; width: 100%;
+    }
+    .kb-panel input:focus { border-color: var(--ink); }
+    .kb-row { display: flex; gap: 8px; }
+    .kb-actions { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+    .kb-actions #kbStatus { flex: 1; font-size: 12.5px; color: var(--muted); }
+    .kb-actions #kbStatus.err { color: #e0726a; }
+    .kb-actions #kbStatus.ok { color: var(--ink); }
+    .kb-actions button {
+      border-radius: 9999px; padding: 8px 16px; font-size: 13px; cursor: pointer; font-family: var(--sans);
+      border: 1px solid var(--hairline-strong); background: transparent; color: var(--ink);
+    }
+    .kb-actions #kbConfirm { background: var(--primary); color: var(--on-primary); border: none; font-weight: 500; }
+    .style-row { display: flex; align-items: center; gap: 10px; margin: 9px 0; }
+    .style-row .lbl { width: 52px; font-size: 13px; color: var(--body); flex: 0 0 52px; }
+    .style-chips { display: flex; gap: 6px; flex: 1; }
+    .style-chips button { flex: 1; padding: 7px 6px; font-size: 12.5px; border-radius: 8px; cursor: pointer;
+      border: 1px solid var(--hairline-strong); background: transparent; color: var(--muted); font-family: var(--sans); }
+    .style-chips button.on { background: var(--primary); color: var(--on-primary); border-color: var(--primary); font-weight: 500; }
+    .set-row { display: flex; align-items: center; gap: 11px; padding: 13px 2px; border-top: 0.5px solid var(--hairline); }
+    .set-row:first-of-type { border-top: none; padding-top: 4px; }
+    .set-ico { font-size: 11px; width: 14px; flex: 0 0 14px; text-align: center; opacity: .9; }
+    .set-lbl { font-size: 13px; color: var(--body); flex: 0 0 40px; }
+    .set-btn { padding: 8px 15px; font-size: 13px; border-radius: 9999px; cursor: pointer; font-family: var(--sans);
+      border: 1px solid var(--hairline-strong); background: var(--canvas-soft); color: var(--ink); transition: background .2s; }
+    .set-btn:hover { background: var(--surface-strong); }
+    .set-row .try-voice { width: 34px; height: 34px; border-radius: 50%; cursor: pointer; flex: 0 0 34px;
+      border: 1px solid var(--hairline-strong); background: var(--canvas-soft); color: var(--ink); font-size: 11px; display: grid; place-items: center; }
+    .set-row .try-voice:hover { background: var(--surface-strong); }
+    .kb-sub { font-size: 12px; color: var(--muted); margin: 12px 0 4px; letter-spacing: .4px; }
+    .kb-list-item { display: flex; align-items: center; gap: 8px; padding: 9px 11px; border-radius: 9px; background: var(--canvas-soft); margin-bottom: 6px; }
+    .kb-list-item .nm { flex: 1; font-size: 13.5px; color: var(--ink); }
+    .kb-list-item .lock { font-size: 11px; color: var(--muted-soft); }
+    .kb-list-item .del { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 14px; padding: 3px 7px; border-radius: 7px; }
+    .kb-list-item .del:hover { background: var(--surface-strong); color: #e0726a; }
+    /* 场景/人设头像条 */
+    .profiles { display: flex; align-items: flex-start; gap: 14px; padding: 12px 32px 0; flex-wrap: wrap; position: relative; z-index: 1; }
+    .prof { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; border: none; background: none; padding: 0; }
+    .prof .av { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-size: 20px;
+      background: var(--card); border: 1px solid var(--hairline-strong); transition: background .2s, box-shadow .2s; }
+    .prof:hover .av { background: var(--surface-strong); }
+    .prof.on .av { box-shadow: 0 0 0 2px var(--ink); }
+    .prof .nm { font-size: 11px; color: var(--muted); max-width: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .prof.on .nm { color: var(--ink); }
+    .prof-add .av { border-style: dashed; color: var(--muted); font-size: 22px; font-weight: 300; }
+    .emoji-pick { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+    .emoji-pick button { width: 34px; height: 34px; border-radius: 9px; font-size: 18px; cursor: pointer; border: 1px solid var(--hairline-strong); background: var(--canvas-soft); }
+    .emoji-pick button.on { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+    .prof-mgr-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; background: var(--canvas-soft); margin-bottom: 6px; }
+    .prof-mgr-item .nm { flex: 1; font-size: 13px; color: var(--ink); }
+    .prof-mgr-item .del { border: none; background: transparent; color: var(--muted); cursor: pointer; padding: 3px 7px; border-radius: 6px; }
+    .prof-mgr-item .del:hover { background: var(--surface-strong); color: #e0726a; }
+    .prof-mgr-item .nm { cursor: pointer; }
+    .prof-mgr-item.on { box-shadow: inset 0 0 0 1px var(--ink); }
+    .prof-field { display: flex; align-items: center; gap: 10px; margin: 9px 0; }
+    .pf-lbl { width: 46px; flex: 0 0 46px; font-size: 13px; color: var(--body); }
+    .prof-modes { display: flex; gap: 6px; }
+    .prof-modes button { padding: 6px 12px; border-radius: 9999px; font-size: 12.5px; cursor: pointer; font-family: var(--sans);
+      border: 1px solid var(--hairline-strong); background: transparent; color: var(--muted); }
+    .prof-modes button.on { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+    .arch-item {
+      text-align: left; width: 100%; background: var(--canvas-soft); border: 1px solid var(--hairline);
+      color: var(--ink); border-radius: 10px; padding: 9px 12px; font-size: 13px; cursor: pointer;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .arch-item:hover { border-color: var(--hairline-strong); background: var(--surface-strong); }
+    .arch-item span { color: var(--muted); font-size: 11px; }
+
+    #log {
+      flex: 1; overflow-y: auto; padding: 36px 24px 16px;
+      display: flex; flex-direction: column; gap: 18px;
+      max-width: 720px; width: 100%; margin: 0 auto;
+      scrollbar-width: thin; scrollbar-color: var(--hairline-strong) transparent;
+    }
+    #log::-webkit-scrollbar { width: 7px; }
+    #log::-webkit-scrollbar-thumb { background: var(--hairline-strong); border-radius: 4px; }
+    .msg {
+      max-width: 84%; padding: 16px 20px; border-radius: 16px;
+      line-height: 1.6; font-size: 16px; white-space: pre-wrap;
+      animation: rise .45s cubic-bezier(.2,.7,.2,1) both;
+    }
+    .msg .who {
+      font-size: 12px; font-weight: 600; letter-spacing: 0.96px; margin-bottom: 7px;
+      text-transform: uppercase; color: var(--muted);
+    }
+    .msg.ai {
+      align-self: flex-start; background: var(--card);
+      border: 1px solid var(--hairline); box-shadow: var(--shadow);
+      font-family: var(--serif); font-weight: 400; color: var(--ink); letter-spacing: 0;
+    }
+    .msg.me {
+      align-self: flex-end; background: var(--surface-strong);
+      border: 1px solid var(--hairline); color: var(--body);
+    }
+    .msg.me .who { text-align: right; }
+    .msg.ai.speaking { box-shadow: 0 6px 22px rgba(0,0,0,0.07); border-color: var(--hairline-strong); }
+    .hint {
+      color: var(--muted); font-size: 15px; line-height: 1.6; align-self: center; text-align: center;
+      max-width: 540px; padding: 22px 26px; margin-top: 7%;
+      border: 1px solid var(--hairline); border-radius: 16px; background: var(--card); box-shadow: var(--shadow);
+    }
+
+    .console {
+      padding: 14px 24px 30px; display: flex; flex-direction: column; align-items: center; gap: 16px;
+    }
+    .modes {
+      display: inline-flex; gap: 4px; padding: 4px; border-radius: 9999px;
+      background: var(--canvas-soft); border: 1px solid var(--hairline);
+    }
+    .modes button {
+      border: none; background: transparent; color: var(--muted); cursor: pointer;
+      padding: 8px 16px; border-radius: 9999px; font-size: 13px; font-family: var(--sans);
+      letter-spacing: .3px; transition: background .2s, color .2s;
+    }
+    .modes button:hover { color: var(--ink); }
+    .modes button.on { background: var(--primary); color: var(--on-primary); font-weight: 500; }
+    .shen-btn {
+      border: 1px solid var(--hairline-strong); background: transparent; color: var(--muted);
+      cursor: pointer; padding: 8px 15px; border-radius: 9999px; font-size: 13px;
+      font-family: var(--serif); letter-spacing: 1px; transition: all .25s; margin-left: 2px;
+    }
+    .shen-btn:hover { color: var(--ink); border-color: var(--ink); }
+    .shen-btn.on { background: #11161d; color: #cdd6e2; border-color: #2b3340; }
+    /* 沉思素在位：整页转入玄水冬藏的沉色 */
+    body.shen { background: #0a0d12; }
+    body.shen #status, body.shen .hint { color: #6b7685; }
+    #status { color: var(--muted); font-size: 14px; min-height: 18px; letter-spacing: .2px; font-variant-numeric: tabular-nums; }
+    #status.live { color: var(--ink); }
+
+    .orb-wrap { position: relative; width: 184px; height: 184px; display: grid; place-items: center; }
+    /* 画布比光球大很多并居中：光晕在到达边界前就淡出，不再被方形边界裁出黑框硬边 */
+    #orbCanvas { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+    .orb {
+      position: relative; z-index: 2;
+      width: 120px; height: 120px; border-radius: 50%; cursor: pointer;
+      border: 1px solid var(--hairline-strong);
+      background: rgba(255,255,255,0.05); backdrop-filter: blur(2px);
+      color: var(--ink); font-family: var(--serif); font-size: 17px; font-weight: 300; letter-spacing: 0;
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      transition: transform .18s ease, border-color .3s;
+    }
+    .orb:hover { transform: scale(1.03); }
+    .orb:active { transform: scale(.96); }
+    .orb.thinking { cursor: wait; }
+
+    .controls { display: flex; gap: 9px; flex-wrap: wrap; justify-content: center; }
+    .controls button {
+      background: transparent; border: 1px solid var(--hairline-strong); color: var(--ink);
+      padding: 9px 19px; border-radius: 9999px; cursor: pointer; font-size: 15px; font-weight: 500;
+      font-family: var(--sans); transition: background .2s, border-color .2s;
+    }
+    .controls button:hover:not(:disabled) { background: var(--surface-strong); }
+    .controls button:disabled { opacity: .4; cursor: not-allowed; }
+    .controls button.on { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+    .textrow { display: flex; gap: 8px; width: 100%; max-width: 620px; }
+    .textrow input {
+      flex: 1; background: var(--card); border: 1px solid var(--hairline-strong); color: var(--ink);
+      padding: 13px 18px; border-radius: 14px; font-size: 16px; font-family: var(--serif); outline: none;
+      caret-color: var(--ink);
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .textrow input:hover { border-color: rgba(255,255,255,0.30); }
+    .textrow input:focus {
+      border-color: rgba(255,255,255,0.55);
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+    }
+    .textrow input::placeholder { color: var(--muted); font-style: italic; letter-spacing: .04em; opacity: .7; }
+    @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ===== 聆听 ===== */
+    #listenPanel { display: none; flex-direction: column; gap: 14px; padding: 8px 4px 24px; }
+    #listenPanel.show { display: flex; }
+    .ln-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .ln-title { font-family: var(--serif); font-size: 19px; color: var(--ink); }
+    .ln-sub { color: var(--muted); font-size: 12px; }
+    .top3 { display: flex; flex-direction: column; gap: 10px; }
+    .keycard { display: flex; gap: 13px; align-items: flex-start; padding: 15px 17px; border-radius: 15px;
+      background: var(--card); border: 1px solid var(--hairline-strong); box-shadow: var(--shadow);
+      transition: background .25s, border-color .25s; }
+    .keycard .n { flex: 0 0 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+      font-size: 12.5px; font-weight: 700; color: var(--on-primary); margin-top: 1px;
+      background: conic-gradient(from 0deg, var(--g-mint), var(--g-peach), var(--g-lavender), var(--g-sky), var(--g-mint)); }
+    .keycard .kc-body { display: flex; flex-direction: column; gap: 5px; }
+    .keycard .kc-text { color: var(--ink); font-size: 15.5px; line-height: 1.55; }
+    .kc-stars { font-size: 12px; letter-spacing: 1px; line-height: 1; color: var(--g-peach); }
+    .kc-stars .off { color: var(--muted-soft); opacity: .5; }
+    /* empty slot: faint, dashed, clearly a placeholder so the layout holds before content arrives */
+    .keycard.empty { background: transparent; border-style: dashed; border-color: var(--hairline); box-shadow: none; }
+    .keycard.empty .n { background: none; border: 1px dashed var(--hairline-strong); color: var(--muted-soft); }
+    .keycard.empty .kc-text { color: var(--muted-soft); font-size: 14px; }
+    .ln-other { border-top: 1px solid var(--hairline); padding-top: 4px; }
+    .ln-other summary { cursor: pointer; color: var(--body); font-size: 13px; list-style: none; padding: 7px 2px; }
+    .ln-other summary::-webkit-details-marker { display: none; }
+    .ln-other summary::before { content: "▸ "; color: var(--muted); }
+    .ln-other[open] summary::before { content: "▾ "; }
+    .ln-other ul { margin: 4px 0 2px; padding-left: 18px; color: var(--body); font-size: 13.5px; line-height: 1.7; }
+    .ln-tail { color: var(--muted-soft); font-size: 12px; line-height: 1.6; max-height: 40px; overflow: hidden;
+      border-left: 2px solid var(--hairline); padding-left: 10px; }
+    .ln-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .ln-btn { background: transparent; color: var(--muted); border: 1px solid var(--hairline-strong);
+      border-radius: 9px; padding: 6px 13px; font-size: 12.5px; font-family: var(--sans); cursor: pointer;
+      transition: color .2s, border-color .2s; }
+    .ln-btn:hover { color: var(--ink); border-color: var(--hairline-strong); }
+    .ln-pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--g-mint);
+      margin-right: 6px; animation: lnpulse 1.4s ease-in-out infinite; vertical-align: middle; }
+    @keyframes lnpulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+    .console.hide-controls .controls, .console.hide-controls .textrow { display: none !important; }
+    .hide { display: none !important; }
+    /* ===== 长期记忆确认卡 ===== */
+    .mem-card { margin: 14px auto; max-width: 560px; background: var(--card); border: 1px solid var(--hairline-strong);
+      border-radius: 16px; box-shadow: var(--shadow); padding: 16px 18px; }
+    .mem-title { font-family: var(--serif); font-size: 16px; color: var(--ink); margin-bottom: 6px; }
+    .mem-sec { color: var(--muted); font-size: 12px; letter-spacing: .5px; margin: 10px 0 4px; }
+    .mem-item { display: flex; align-items: flex-start; gap: 9px; padding: 5px 0; }
+    .mem-x { flex: 0 0 auto; color: var(--muted-soft); cursor: pointer; font-size: 13px; line-height: 1.6; transition: color .15s; }
+    .mem-x:hover { color: var(--g-rose); }
+    .mem-t { flex: 1; color: var(--body); font-size: 14.5px; line-height: 1.55; outline: none; border-radius: 5px; padding: 1px 4px; }
+    .mem-t:focus { background: var(--surface-strong); box-shadow: inset 0 0 0 1px var(--hairline-strong); }
+    .mem-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><svg viewBox="-40 -900 2440 1080" role="img" aria-label="掰扯" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="wmDot" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#FF8A5B"/><stop offset="1" stop-color="#FF5E8A"/>
+      </linearGradient></defs>
+      <g transform="translate(0,0) scale(1,-1)"><path class="wm-fill" d="M849 517Q882 573 892 573Q898 573 938.0 533.5Q978 494 978 488Q978 481 959 481H849V307Q888 371 896.5 371.0Q905 371 947.5 329.0Q990 287 990.0 279.0Q990 271 972 271H849V2Q849 -33 844.5 -51.0Q840 -69 825.5 -80.0Q811 -91 775.0 -101.5Q739 -112 724 -112Q701 -112 699 -90Q695 -53 682.5 -39.5Q670 -26 637.5 -16.0Q605 -6 605.0 -2.5Q605 1 641.0 1.5Q677 2 699.5 6.0Q722 10 728.5 20.5Q735 31 735 55V271H620Q617 151 613.5 94.5Q610 38 603.0 10.0Q596 -18 581.0 -35.0Q566 -52 536.0 -62.0Q506 -72 481 -72Q464 -72 463 -51Q461 -17 447.0 -3.0Q433 11 398 21Q385 25 385.0 30.5Q385 36 399 36L437 35Q477 35 491.0 43.5Q505 52 509.0 71.0Q513 90 517.0 206.5Q521 323 522 388H499Q497 385 485 375Q480 262 459.0 186.5Q438 111 391.0 56.0Q344 1 258.0 -47.5Q172 -96 160 -96Q157 -96 157 -94Q157 -90 175 -77Q294 8 332.5 85.0Q371 162 379 272H245Q228 108 138.5 6.0Q49 -96 37 -96Q36 -96 36 -94Q36 -88 45 -74Q112 32 129.5 102.5Q147 173 149 272H94Q70 272 51 266L34 309Q57 305 84 305H150Q152 407 152 474H92Q68 474 49 468L32 511Q55 507 82 507H151Q151 597 148 668L40 660Q27 660 27.0 663.0Q27 666 49 674Q195 731 299 814Q334 785 389 729Q458 716 521 684Q509 782 509 800Q509 809 514.5 809.0Q520 809 548.5 799.0Q577 789 582.5 785.0Q588 781 588.0 775.5Q588 770 575.5 765.5Q563 761 559.0 757.5Q555 754 555 747Q555 716 575.5 665.5Q596 615 629.5 580.5Q663 546 719 514H735V687L610 678Q586 676 586.0 681.0Q586 686 608 693Q746 735 854 822Q967 730 967 712Q967 699 946 703Q935 705 916.0 705.0Q897 705 869 702Q865 695 849 684ZM380 703Q374 704 367 704Q340 704 277 691Q275 675 256 663V513Q287 563 297.0 563.0Q307 563 349 527Q374 600 380 703ZM735 481H678Q661 466 645 424Q640 411 632 411Q616 411 577.0 478.5Q538 546 522 673Q496 673 481 638Q422 504 340 421H517Q532 447 537.0 453.5Q542 460 547.0 460.0Q552 460 582.5 439.5Q613 419 634.0 401.5Q655 384 655 375Q655 361 621 351Q621 320 620 304H735ZM255 474Q253 370 248 305H258Q281 340 288.5 348.5Q296 357 301 357Q315 357 381 303Q384 343 384 388Q349 388 334 377L320 402Q280 365 273 365Q271 365 271.0 368.0Q271 371 277 380Q307 421 330 474Z"/></g>
+      <g transform="translate(1120,0) scale(1,-1)"><path class="wm-fill" d="M179 553H70Q46 553 27 547L10 590Q33 586 60 586H179V721Q179 782 175 829Q223 826 262.0 819.5Q301 813 306.5 809.0Q312 805 312 801Q312 790 292 783V594Q317 637 325.0 648.0Q333 659 338 659Q351 659 421 589L420 607Q518 593 535.5 588.0Q553 583 553.0 574.0Q553 565 531 555V2H612V730Q612 780 610 819Q653 818 696.5 811.5Q740 805 749.0 800.5Q758 796 758 790Q758 779 731 770V449H769Q781 471 796.0 495.5Q811 520 815.5 525.0Q820 530 826.0 530.0Q832 530 852.5 516.0Q873 502 898.0 480.5Q923 459 932.0 449.0Q941 439 941 430Q941 416 923 416H731V2H793Q822 55 836.5 74.5Q851 94 857.0 94.0Q863 94 881.0 80.0Q899 66 928.5 40.0Q958 14 967.5 3.0Q977 -8 977 -17Q977 -31 956 -31H356Q336 -31 320 -42L294 5Q318 2 344 2H422V429Q364 396 292 353V10Q292 -25 286.0 -44.5Q280 -64 263.5 -76.0Q247 -88 212.0 -97.0Q177 -106 159.5 -106.0Q142 -106 140 -86Q136 -49 117.0 -31.0Q98 -13 52 4Q37 10 37.0 13.0Q37 16 55.0 15.0Q73 14 95 14Q150 14 164.5 22.5Q179 31 179 57V280Q125 244 111.5 230.5Q98 217 94.0 217.0Q90 217 86.0 221.0Q82 225 63.0 261.0Q44 297 22 345L179 383ZM422 553H292V413L422 450Z"/></g>
+      <circle cx="2210" cy="-770" r="130" fill="url(#wmDot)"/>
+    </svg></h1>
+    <div class="modes" id="modes">
+      <button data-mode="self" class="on">和自己</button>
+      <button data-mode="other">和他人</button>
+      <button data-mode="duo">双人播客</button>
+    </div>
+    <div class="head-right">
+      <select class="voice kb" id="kbSelect" title="选知识库"></select>
+      <span class="oneonone" id="oneOnOne">
+        <label class="partner hide" id="partnerLabel" title="跟谁聊就填谁的称呼；每个人的记忆各自独立">对谈对象 <input id="partnerName" type="text" value="" maxlength="12" placeholder="对方的称呼" /></label>
+      </span>
+      <label class="partner duoonly hide" id="duoOnly">时长
+        <select class="voice" id="podDur" title="本期时长">
+          <option value="5">5 分钟</option>
+          <option value="10">10 分钟</option>
+          <option value="15" selected>15 分钟</option>
+          <option value="0">不限</option>
+        </select>
+      </label>
+      <button class="try-voice" id="voiceOutBtn" title="它出不出声" aria-label="出声开关">🔊</button>
+      <button class="try-voice" id="settingsBtn" title="设置" aria-label="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    </div>
+  </header>
+
+  <div class="profiles" id="profiles"></div>
+
+  <div class="kb-panel" id="profilePanel" style="left:32px;">
+    <div class="kb-panel-inner" style="width:392px; max-height:82vh; overflow:auto;">
+      <div class="kb-panel-title">场景</div>
+      <div id="profMgr"></div>
+      <div class="kb-sub" id="profEditTitle">新建场景</div>
+      <div class="prof-field"><span class="pf-lbl">名字</span><input id="profName" type="text" maxlength="8" placeholder="如 沉思" style="flex:1;" /></div>
+      <div class="prof-field"><span class="pf-lbl">图标</span><div class="emoji-pick" id="emojiPick"></div></div>
+      <div class="prof-field"><span class="pf-lbl">知识库</span><select id="profKb" class="voice" style="flex:1;"></select></div>
+      <div class="prof-field"><span class="pf-lbl">模式</span><div class="prof-modes" id="profModes"><button data-m="self">和自己</button><button data-m="other">和他人</button><button data-m="duo">双人播客</button></div></div>
+      <div class="prof-field"><span class="pf-lbl">音色</span><select id="profVoice" class="voice" style="flex:1;"></select></div>
+      <div class="prof-field" style="align-items:flex-start;"><span class="pf-lbl" style="margin-top:7px;">风格</span><div id="profStyle" style="flex:1;"></div></div>
+      <div class="kb-actions">
+        <span id="profStatus"></span>
+        <button id="profDelete" style="display:none;">删除</button>
+        <button id="profClose">关闭</button>
+        <button id="profSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="kb-panel" id="settingsPanel" style="left:auto; right:32px;">
+    <div class="kb-panel-inner" style="width:360px;">
+      <div class="kb-panel-title">设置</div>
+      <div class="set-row"><span class="set-ico">🙂</span><span class="set-lbl">名字</span>
+        <input id="assistantNameInput" maxlength="8" placeholder="搭子" style="margin-left:auto;width:120px;background:transparent;border:none;border-bottom:1px solid var(--hairline-strong);color:var(--ink);font-family:var(--serif);font-size:15px;outline:none;padding:2px 0;text-align:right;" />
+      </div>
+      <div class="set-row"><span class="set-ico">🔈</span><span class="set-lbl">音色</span>
+        <select class="voice" id="voiceSelect" title="选音色" style="flex:1;"></select>
+        <button class="try-voice" id="tryVoice" title="试听">▶</button>
+      </div>
+      <div class="set-row"><span class="set-ico">🎚</span><span class="set-lbl">风格</span>
+        <button class="set-btn" id="styleBtn" style="margin-left:auto;">调档位…</button>
+      </div>
+      <div class="set-row"><span class="set-ico">📚</span><span class="set-lbl">知识库</span>
+        <button class="set-btn" id="kbAdd" style="margin-left:auto;">＋ 添加</button>
+        <button class="set-btn" id="archiveBtn">📁 存档</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="kb-panel" id="archivePanel" style="left:auto; right:32px;">
+    <div class="kb-panel-inner" style="width:520px;">
+      <div class="kb-panel-title">本期 · 存档与导出</div>
+      <div class="kb-actions" style="margin-top:0;">
+        <span id="archStatus"></span>
+        <button id="archSave">存档本期</button>
+        <button id="archTxt">下载文字稿</button>
+        <button id="archAudio">下载音频</button>
+      </div>
+      <div class="kb-panel-title" style="margin-top:10px;">回看</div>
+      <div id="archList" style="max-height:300px; overflow:auto; display:flex; flex-direction:column; gap:6px;"></div>
+    </div>
+  </div>
+
+  <div class="kb-panel" id="kbPanel">
+    <div class="kb-panel-inner">
+      <div class="kb-panel-title">知识库</div>
+      <div id="kbList"></div>
+      <div class="kb-sub">添加新库</div>
+      <input id="kbPath" type="text" placeholder="贴 Obsidian 文件夹路径，或 obsidian:// 链接" />
+      <div class="kb-row">
+        <input id="kbBot" type="text" placeholder="显示名（可留空）" maxlength="12" />
+        <input id="kbTopic" type="text" placeholder="领域（如 价值投资）" maxlength="30" />
+      </div>
+      <div class="kb-actions">
+        <span id="kbStatus"></span>
+        <button id="kbCancel">关闭</button>
+        <button id="kbConfirm">验证并添加</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="kb-panel" id="stylePanel">
+    <div class="kb-panel-inner" style="width:480px;">
+      <div class="kb-panel-title">对话风格（即时生效·自动记住）</div>
+      <div id="styleRows"></div>
+      <div class="kb-actions">
+        <span id="styleHint" style="flex:1; font-size:12.5px; color:var(--muted);">中间档=默认。改完直接聊就生效。</span>
+        <button id="styleReset">复位</button>
+        <button id="styleClose">完成</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="log">
+    <div class="hint">点下面的光球开始对谈。</div>
+  </div>
+
+  <div id="listenPanel">
+    <div class="ln-head">
+      <div class="ln-title"><span id="lnPulse" class="ln-pulse" style="visibility:hidden;"></span>全场最重要的三条</div>
+      <div class="ln-sub" id="lnSub">未开始</div>
+    </div>
+    <div class="top3" id="lnTop3"></div>
+    <details class="ln-other" id="lnOtherWrap" style="display:none;">
+      <summary id="lnOtherSummary">其他信息</summary>
+      <ul id="lnOther"></ul>
+    </details>
+    <div class="ln-tail" id="lnTail" style="display:none;"></div>
+    <div class="ln-actions" id="lnActions" style="display:none;">
+      <button class="ln-btn" id="lnCopy">复制三条</button>
+      <button class="ln-btn" id="lnExport">导出全部</button>
+    </div>
+  </div>
+
+  <div class="console">
+    <div id="status"></div>
+    <div class="orb-wrap">
+      <canvas id="orbCanvas" aria-hidden="true"></canvas>
+      <button class="orb" id="orb">开聊</button>
+    </div>
+    <div class="controls">
+      <button id="interrupt" disabled>打断它</button>
+      <button id="textToggle">打字</button>
+      <button id="reset" disabled>结束</button>
+    </div>
+    <div class="textrow" id="textRow" style="display:none;">
+      <input id="textInput" type="text" placeholder="想到哪儿，写到哪儿" />
+    </div>
+  </div>
+
+  <script>
+    const log = document.getElementById("log");
+    const orb = document.getElementById("orb");
+    const statusEl = document.getElementById("status");
+    const interruptBtn = document.getElementById("interrupt");
+    const resetBtn = document.getElementById("reset");
+    const textRow = document.getElementById("textRow");
+    const textInput = document.getElementById("textInput");
+    const PLACEHOLDERS = [
+      "想到哪儿，写到哪儿",
+      "说点什么……",
+      "把心里那点东西，落成字",
+      "在这儿，慢慢聊",
+      "此刻在想什么",
+      "随便起个头，剩下的交给来回",
+      "有什么想掰扯掰扯的",
+      "写下来，看看能聊出什么",
+      "不急，想清楚再落字",
+      "这会儿，最想聊的是哪件事",
+    ];
+    textInput.placeholder = PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)];
+    const textToggle = document.getElementById("textToggle");
+    const partnerNameInput = document.getElementById("partnerName");
+    // 和自己聊 → 固定斯坦利（不看输入框）；和他人聊 → 用输入的称呼，空着就用"对方"
+    const partnerName = () => ((appMode === "other" || appMode === "dig") ? ((partnerNameInput.value || "").trim() || (appMode === "dig" ? "下属" : "对方")) : "斯坦利");
+
+    // ---- Voice = pure timbre (persona name comes from the active knowledge base) ----
+    const VOICES = [
+      { id: "zh_male_yuanboxiaoshu_uranus_bigtts", label: "渊博小叔（男）" },
+      { id: "zh_female_shuangkuaisisi_uranus_bigtts", label: "爽快思思（女）" }
+    ];
+    let voiceIdx = 0;
+    const currentVoice = () => VOICES[voiceIdx].id;
+    const voiceSelect = document.getElementById("voiceSelect");
+    VOICES.forEach((v, i) => {
+      const o = document.createElement("option");
+      o.value = i; o.textContent = "🔊 " + v.label; voiceSelect.appendChild(o);
+    });
+    voiceSelect.addEventListener("change", () => { voiceIdx = Number(voiceSelect.value) || 0; });
+
+    const podDurSel = document.getElementById("podDur"); // 双人播客时长选择
+
+    // ---- Knowledge bases = knowledge + persona name + topic (the platform core) ----
+    // dir:"" means the server default (贝壳); custom KBs carry an absolute folder path.
+    // Built-ins always present, in this order: 自由聊天 (no KB) first, then 贝壳.
+    // Custom KBs the user added are merged in after them.
+    const BUILTIN_KBS = [
+      { label: "自由聊天", dir: "__none__", bot: "搭子", topic: "随便聊", builtin: true, free: true },
+      { label: "贝壳模式分析", dir: "", bot: "老根", topic: "房产经纪这行", builtin: true }
+    ];
+    let KBS = BUILTIN_KBS.slice();
+    try {
+      const saved = JSON.parse(localStorage.getItem("baiche_kbs") || "null");
+      if (Array.isArray(saved)) KBS = BUILTIN_KBS.concat(saved.filter((k) => k && !k.builtin && !k.free));
+    } catch (e) { /* ignore */ }
+    let kbIdx = 0;
+    const activeKB = () => KBS[kbIdx] || KBS[0];
+    // 助手统一名字（全局·可改）。挂哪个知识库它都叫这个名；知识库只决定它"懂什么"。
+    let assistantName = "搭子";
+    try { assistantName = (localStorage.getItem("baiche_assistant_name") || "搭子").trim() || "搭子"; } catch {}
+    const currentBot = () => assistantName;
+    const currentTopic = () => activeKB().topic || "";
+    const currentKbDir = () => activeKB().dir || "";
+    const currentFree = () => !!activeKB().free;
+    const soulMode = () => appMode === "shen";
+    // ===== 抠材料（dig）：质询替身的本场状态 =====
+    // ready 后才把 dig 上下文随每轮请求带上；checklist 每项 {id,focus,question,why,status}
+    let digCtx = { ready: false, boss: "", partner: "", materialTitle: "", materialText: "", kbDir: "", checklist: [] };
+    const PRESS_AFTER_TURNS = 4;   // 前 4 个来回放松，之后收紧
+    function digPhase() {
+      const aiTurns = history.filter((m) => m && m.role === "ai").length;
+      const allClosed = digCtx.checklist.length && digCtx.checklist.every((c) => c.status === "closed");
+      return (aiTurns >= PRESS_AFTER_TURNS || allClosed) ? "press" : "warmup";
+    }
+    function digBody() {
+      if (appMode !== "dig" || !digCtx.ready) return undefined;
+      return {
+        boss: digCtx.boss, materialTitle: digCtx.materialTitle, materialText: digCtx.materialText,
+        kbDir: digCtx.kbDir, phase: digPhase(),
+        checklist: digCtx.checklist.map((c) => ({ id: c.id, focus: c.focus, question: c.question, status: c.status }))
+      };
+    }
+    const saveKBS = () => { try { localStorage.setItem("baiche_kbs", JSON.stringify(KBS)); } catch (e) {} };
+    const kbSelect = document.getElementById("kbSelect");
+    function renderKbSelect() {
+      kbSelect.innerHTML = "";
+      KBS.forEach((k, i) => {
+        const o = document.createElement("option");
+        o.value = i; o.textContent = `${k.free ? "💬" : "📚"} ${k.label}`; kbSelect.appendChild(o);
+      });
+      kbSelect.value = String(kbIdx);
+    }
+    renderKbSelect();
+    kbSelect.addEventListener("change", () => { kbIdx = Number(kbSelect.value) || 0; if (mode === "idle") showIdleHint(); });
+    document.getElementById("partnerName").addEventListener("input", () => { if (mode === "idle" && appMode === "other") showIdleHint(); });
+    // 助手名字（默认搭子，点名字直接改）
+    const assistantNameInput = document.getElementById("assistantNameInput");
+    assistantNameInput.value = assistantName;
+    assistantNameInput.addEventListener("input", () => { assistantName = (assistantNameInput.value || "").trim() || "搭子"; try { localStorage.setItem("baiche_assistant_name", assistantName); } catch {} });
+    assistantNameInput.addEventListener("blur", () => { assistantNameInput.value = assistantName; });
+
+    // add-knowledge-base panel
+    const kbPanel = document.getElementById("kbPanel");
+    const kbPath = document.getElementById("kbPath");
+    const kbBot = document.getElementById("kbBot");
+    const kbTopic = document.getElementById("kbTopic");
+    const kbStatus = document.getElementById("kbStatus");
+    const kbListEl = document.getElementById("kbList");
+    function renderKbList() {
+      kbListEl.innerHTML = "";
+      KBS.forEach((k, i) => {
+        const row = document.createElement("div"); row.className = "kb-list-item";
+        const active = i === kbIdx ? `<span style="color:var(--muted); font-size:12px;"> · 使用中</span>` : "";
+        row.innerHTML = `<span class="nm">${k.free ? "💬" : "📚"} ${escapeHtml(k.label)}${active}</span>`;
+        if (k.builtin || k.free) { const s = document.createElement("span"); s.className = "lock"; s.textContent = "🔒"; s.title = "内置，不可删"; row.appendChild(s); }
+        else { const b = document.createElement("button"); b.className = "del"; b.title = "删除"; b.textContent = "🗑"; b.addEventListener("click", () => deleteKb(i)); row.appendChild(b); }
+        kbListEl.appendChild(row);
+      });
+    }
+    function deleteKb(i) {
+      if (!KBS[i] || KBS[i].builtin || KBS[i].free) return;
+      KBS.splice(i, 1); saveKBS();
+      if (kbIdx === i) kbIdx = 0; else if (kbIdx > i) kbIdx -= 1;
+      if (kbIdx >= KBS.length) kbIdx = 0;
+      renderKbSelect(); renderKbList();
+      if (mode === "idle") showIdleHint();
+    }
+    document.getElementById("kbAdd").addEventListener("click", () => {
+      kbPanel.classList.toggle("open");
+      if (kbPanel.classList.contains("open")) { kbStatus.textContent = ""; kbStatus.className = ""; renderKbList(); }
+    });
+    document.getElementById("kbCancel").addEventListener("click", () => kbPanel.classList.remove("open"));
+    document.getElementById("kbConfirm").addEventListener("click", async () => {
+      const path = kbPath.value.trim();
+      const bot = kbBot.value.trim();
+      const topic = kbTopic.value.trim();
+      if (!path) { kbStatus.textContent = "先贴一个路径。"; kbStatus.className = "err"; return; }
+      if (!topic) { kbStatus.textContent = "填一下领域（如 价值投资）。"; kbStatus.className = "err"; return; }
+      kbStatus.textContent = "验证中…"; kbStatus.className = "";
+      try {
+        const r = await fetch("/api/dialogue/kb/check", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ path })
+        });
+        const d = await r.json();
+        if (!d.ok) { kbStatus.textContent = d.error || "验证失败。"; kbStatus.className = "err"; return; }
+        KBS.push({ label: d.label, dir: d.dir, bot: bot || d.label, topic });
+        saveKBS();
+        kbIdx = KBS.length - 1;
+        renderKbSelect(); renderKbList();
+        kbStatus.textContent = `已添加：${d.label}（${d.fileCount} 篇笔记）`; kbStatus.className = "ok";
+        kbPath.value = ""; kbBot.value = ""; kbTopic.value = "";
+        setTimeout(() => kbPanel.classList.remove("open"), 900);
+      } catch (e) {
+        kbStatus.textContent = "出错：" + e.message; kbStatus.className = "err";
+      }
+    });
+
+    // ---- archive: export current session + browse/replay past episodes ----
+    function episodeTranscript() {
+      if (appMode === "duo") return duoTranscript.filter((m) => m && m.text);
+      return history.filter((m) => m && m.text).map((m) => ({ speaker: m.role === "ai" ? currentBot() : ("我"), text: m.text }));
+    }
+    function safeName(s) { return String(s || "掰扯").replace(/[\\/:*?"<>|《》\s]/g, "") || "掰扯"; }
+    function downloadBlob(name, blob) {
+      const u = URL.createObjectURL(blob); const a = document.createElement("a");
+      a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 3000);
+    }
+    const archivePanel = document.getElementById("archivePanel");
+    const archStatus = document.getElementById("archStatus");
+    const archList = document.getElementById("archList");
+    document.getElementById("archiveBtn").addEventListener("click", () => {
+      archivePanel.classList.toggle("open");
+      if (archivePanel.classList.contains("open")) { archStatus.textContent = ""; archStatus.className = ""; loadArchiveList(); }
+    });
+    document.getElementById("archTxt").addEventListener("click", () => {
+      const tr = episodeTranscript();
+      if (!tr.length) { archStatus.textContent = "本期还没有内容。"; archStatus.className = "err"; return; }
+      const m = episodeMeta;
+      const md = `# ${m.title || "掰扯"}\n\n> ${m.mode || ""} · ${m.topic || ""} · 知识库：${m.kb || ""} · ${m.cast || ""}\n\n` + tr.map((x) => `**${x.speaker}**：${x.text}`).join("\n\n") + "\n";
+      downloadBlob(safeName(m.title) + ".md", new Blob([md], { type: "text/markdown" }));
+    });
+    document.getElementById("archAudio").addEventListener("click", () => {
+      if (!episodeClips.length) { archStatus.textContent = "本期还没录到音频（开始后再导）。"; archStatus.className = "err"; return; }
+      downloadBlob(safeName(episodeMeta.title) + ".mp3", new Blob(episodeClips, { type: "audio/mpeg" }));
+    });
+    document.getElementById("archSave").addEventListener("click", async () => {
+      const tr = episodeTranscript();
+      if (!tr.length) { archStatus.textContent = "本期还没有内容。"; archStatus.className = "err"; return; }
+      archStatus.textContent = "存档中…"; archStatus.className = "";
+      try {
+        const r = await fetch("/api/archive/save", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...episodeMeta, transcript: tr }) });
+        const d = await r.json();
+        if (!d.ok) throw new Error(d.error || "失败");
+        archStatus.textContent = "已存档 ✓"; archStatus.className = "ok"; loadArchiveList();
+      } catch (e) { archStatus.textContent = "出错：" + e.message; archStatus.className = "err"; }
+    });
+    async function loadArchiveList() {
+      try {
+        const r = await fetch("/api/archive/list"); const d = await r.json();
+        archList.innerHTML = (d.items || []).map((it) => `<button class="arch-item" data-id="${it.id}">${escapeHtml(it.title)}<span>· ${it.mode} · ${(it.savedAt || "").slice(0, 10)} · ${it.turns}段</span></button>`).join("") || `<span style="color:var(--muted);font-size:12px">还没有存档。</span>`;
+      } catch (e) { archList.innerHTML = `<span style="color:#e0726a">加载失败</span>`; }
+    }
+    archList.addEventListener("click", async (e) => {
+      const b = e.target.closest(".arch-item"); if (!b) return;
+      try {
+        const r = await fetch("/api/archive/get?id=" + b.dataset.id); const d = await r.json();
+        log.innerHTML = `<div class="hint">回看：${escapeHtml(d.meta.title)} · ${escapeHtml(d.meta.mode)} · ${(d.meta.savedAt || "").slice(0, 10)}</div>`;
+        d.transcript.forEach((m) => {
+          const side = (m.speaker === "我" || m.speaker === "在座" || m.speaker.indexOf("听众") === 0) ? "me" : "ai";
+          const el = document.createElement("div"); el.className = "msg " + side;
+          el.innerHTML = `<div class="who">${escapeHtml(m.speaker)}</div>${escapeHtml(m.text)}`;
+          log.appendChild(el);
+        });
+        archivePanel.classList.remove("open");
+      } catch (err) { archStatus.textContent = "打开失败"; archStatus.className = "err"; }
+    });
+
+    // try-listen: play a sample line in the currently selected voice
+    const tryVoiceBtn = document.getElementById("tryVoice");
+    let tryAudio = null;
+    tryVoiceBtn.addEventListener("click", async () => {
+      if (tryAudio) { tryAudio.pause(); tryAudio = null; }
+      tryVoiceBtn.disabled = true; tryVoiceBtn.textContent = "…";
+      try {
+        const url = await fetchTTS(`${partnerName()}，这事咱得往根上扒一扒，急不得。`);
+        tryAudio = new Audio(url);
+        tryAudio.onended = tryAudio.onerror = () => { URL.revokeObjectURL(url); tryAudio = null; };
+        await tryAudio.play();
+      } catch (e) { /* ignore */ }
+      tryVoiceBtn.disabled = false; tryVoiceBtn.textContent = "▶";
+    });
+
+    let history = [];       // [{role:'ai'|'s', text}]
+    let stream = null;
+    let recorder = null;
+    let audioCtx = null;
+    let analyser = null;
+    let vadTimer = null;     // setInterval id (keeps firing in background tabs)
+    let hardStopTimer = null; // guaranteed cutoff regardless of detection loop
+    let chunks = [];
+    let mode = "idle";      // idle | speaking | listening | thinking
+    let currentAudio = null;
+    let textOnly = false;   // true when mic is unavailable
+    let turnSeq = 0;        // bumps to cancel an in-flight streaming turn
+    let bargeRAF = null;    // barge-in mic monitor while the bot is speaking
+    let bargeEnabled = true;
+    let liveReplyText = ""; // 本轮已说出口的文字；被打断时存进历史，让它"记得"说到哪
+    let appMode = "self";   // self (你↔AI，固定斯坦利) | other (AI↔他人，填称呼) | duo (AI×AI 播客)
+    let recording = false;  // collect audio clips for the current session's export
+    let episodeClips = [];  // ArrayBuffers in play order
+    let episodeMeta = {};   // { title, mode, topic, kb, cast }
+
+    function setStatus(text, live) {
+      statusEl.textContent = text;
+      statusEl.classList.toggle("live", !!live);
+    }
+    function setMode(m) {
+      mode = m;
+      orb.classList.remove("listening", "thinking", "speaking");
+      if (m === "listening") { orb.classList.add("listening"); orb.textContent = "在听"; }
+      else if (m === "thinking") { orb.classList.add("thinking"); orb.textContent = "在想"; }
+      else if (m === "speaking") { orb.classList.add("speaking"); orb.textContent = "在说"; }
+      else { orb.textContent = history.length ? "继续" : "开聊"; }
+    }
+    const meLabel = () => ("我");
+    function addMsg(role, text) {
+      const el = document.createElement("div");
+      el.className = "msg " + (role === "ai" ? "ai" : "me");
+      el.innerHTML = `<div class="who">${role === "ai" ? currentBot() : meLabel()}</div>${escapeHtml(text)}`;
+      log.appendChild(el);
+      log.scrollTop = log.scrollHeight;
+      return el;
+    }
+    function escapeHtml(s) {
+      return s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+    }
+
+    function pickMime() {
+      const c = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"];
+      return c.find((t) => window.MediaRecorder?.isTypeSupported?.(t)) || "";
+    }
+
+    async function ensureMic() {
+      if (stream) return true;
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setStatus("这个浏览器/地址不支持麦克风（需用 http://localhost 或 https 打开）。");
+        return false;
+      }
+      setStatus("正在请求麦克风权限…请在弹窗里点「允许」", true);
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const src = audioCtx.createMediaStreamSource(stream);
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 1024;
+        src.connect(analyser);
+        return true;
+      } catch (e) {
+        const map = {
+          NotAllowedError: "麦克风权限被拒。点地址栏左侧的锁🔒图标 → 把「麦克风」设为允许，再刷新。也可以直接在下面打字。",
+          NotFoundError: "没检测到麦克风设备。可以直接在下面打字对谈。",
+          NotReadableError: "麦克风被其它程序占用。关掉占用的程序，或直接打字。"
+        };
+        setStatus(map[e.name] || ("麦克风出错：" + e.message + "（可直接打字）"));
+        textRow.style.display = "flex";
+        return false;
+      }
+    }
+
+    // ---- bot turn: STREAM text sentence-by-sentence, TTS+play each as it arrives ----
+    // Pipeline: model streams → split into sentences → fire TTS per sentence (in order,
+    // in parallel) → play strictly in order. First sentence speaks in ~2-3s instead of
+    // waiting for the whole reply + whole synthesis.
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+    function fetchTTS(text, voiceOverride) {
+      return fetch("/api/dialogue/speech", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text, voice: voiceOverride || currentVoice() })
+      }).then(async (r) => {
+        if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.error || "语音失败"); }
+        return URL.createObjectURL(await r.blob());
+      });
+    }
+    // 桥接音：两拍垫话放完、第一句正式内容还没就绪时，用极短的过渡音填住空档（避免死寂）。
+    // 会话开始预合成、复用 blob。
+    const BRIDGE_LINES = ["嗯——", "那个……", "让我想想啊，", "嗯，", "怎么说呢……"];
+    let bridgeBlobs = [], bridgeVoice = null;
+    async function prefetchBridges() {
+      const v = currentVoice();
+      if (bridgeBlobs.length && bridgeVoice === v) return;
+      bridgeVoice = v;
+      const got = await Promise.all(BRIDGE_LINES.map((tx) =>
+        fetch("/api/dialogue/speech", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: tx, voice: v }) })
+          .then((r) => (r.ok ? r.blob() : null)).catch(() => null)));
+      bridgeBlobs = got.filter(Boolean);
+    }
+    function pickBridgeUrl() { return bridgeBlobs.length ? URL.createObjectURL(bridgeBlobs[Math.floor(Math.random() * bridgeBlobs.length)]) : null; }
+
+    function startEpisode() {
+      recording = true; episodeClips = [];
+      episodeMeta = {
+        mode: appMode === "duo" ? "双人播客" : "对谈",
+        topic: currentTopic(), kb: (activeKB() || {}).label || "",
+        cast: appMode === "duo" ? `${CAST[0].name}×${CAST[1].name}` : currentBot(),
+        title: `${appMode === "duo" ? SHOW_NAME + "· " : ""}${currentTopic()}`
+      };
+    }
+    function playUrl(url) {
+      if (recording) { fetch(url).then((r) => r.arrayBuffer()).then((b) => episodeClips.push(b)).catch(() => {}); }
+      return new Promise((resolve) => {
+        const a = new Audio(url);
+        currentAudio = a;
+        let done = false, safety = null;
+        const finish = () => { if (done) return; done = true; if (safety) clearTimeout(safety); URL.revokeObjectURL(url); if (currentAudio === a) currentAudio = null; resolve(); };
+        a.onended = a.onerror = finish;
+        // safety: if 'ended' never fires (e.g. no audio output), resolve a bit after its duration
+        a.onloadedmetadata = () => { const d = a.duration; if (isFinite(d) && d > 0) { if (safety) clearTimeout(safety); safety = setTimeout(finish, d * 1000 + 1500); } };
+        safety = setTimeout(finish, 30000); // hard cap until duration is known
+        a.play().catch(() => finish());
+      });
+    }
+
+    // Barge-in: while the bot speaks, watch the mic. If real, sustained voice comes in
+    // (above a high threshold to ride over residual echo), cut the bot off and listen.
+    function startBargeIn() {
+      if (!bargeEnabled || !analyser || bargeRAF || textOnly || !stream) return;
+      const buf = new Uint8Array(analyser.fftSize);
+      const THRESH = 0.055;  // ride over speaker echo, but low enough that normal speech triggers
+      const NEED = 300;      // ms of sustained voice before we count it as barge-in
+      let voiced = 0;
+      let last = performance.now();
+      const tick = () => {
+        if (mode !== "speaking") { bargeRAF = null; return; }
+        analyser.getByteTimeDomainData(buf);
+        let s = 0;
+        for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; s += v * v; }
+        const rms = Math.sqrt(s / buf.length);
+        const now = performance.now(); const dt = now - last; last = now;
+        if (rms > THRESH) {
+          voiced += dt;
+          if (voiced > NEED) { bargeRAF = null; triggerBargeIn(); return; }
+        } else {
+          voiced = Math.max(0, voiced - dt * 1.5); // decay so brief blips don't accumulate
+        }
+        bargeRAF = requestAnimationFrame(tick);
+      };
+      bargeRAF = requestAnimationFrame(tick);
+    }
+    function stopBargeIn() {
+      if (bargeRAF) cancelAnimationFrame(bargeRAF);
+      bargeRAF = null;
+    }
+    function triggerBargeIn() {
+      turnSeq++; // cancel streaming + queued playback for this turn
+      // 把它被打断前已说出口的半句存进历史，下一轮它就"记得"说到哪、能顺着走（#4 优雅打断）
+      if (liveReplyText.trim()) { history.push({ role: "ai", text: liveReplyText.trim() + "……（被打断）" }); liveReplyText = ""; }
+      if (currentAudio) { currentAudio.pause(); currentAudio.src = ""; currentAudio = null; }
+      interruptBtn.disabled = true;
+      startListening(); // hand the floor back to the user immediately
+    }
+
+    async function botTurn(draft) {
+      const myTurn = ++turnSeq;
+      const silent = !voiceOut || textOnly;   // 不出声：照样流式出文字，只是不配音/不播
+      const sentHistory = history.slice();   // what the model sees (without this reply)
+      if (!silent && !soulMode()) prefetchBridges();   // 预热过渡音；沉思素留白，不要过渡音
+      setMode("thinking");
+      setStatus(silent ? `${currentBot()}在打字…` : `${currentBot()}在想…`);
+
+      const bubble = addMsg("ai", "");
+      bubble.classList.add("speaking");
+      let bubbleText = "";
+      liveReplyText = "";   // 本轮开始，清空"已说出口"
+      const appendText = (s) => {
+        bubbleText += s;
+        liveReplyText = bubbleText;   // 实时记录，barge-in 时取用
+        bubble.innerHTML = `<div class="who">${currentBot()}</div>${escapeHtml(bubbleText)}`;
+        log.scrollTop = log.scrollHeight;
+      };
+
+      const ttsPromises = [];   // ordered TTS fetches, started as sentences arrive
+      let streamDone = false;
+      let consumerStarted = false;
+
+      function beginSpeak() {
+        if (consumerStarted) return;
+        consumerStarted = true;
+        setMode("speaking");
+        setStatus(bargeEnabled && !textOnly && stream ? `${currentBot()}在说话…（你直接开口就能插话）` : `${currentBot()}在说话…（可点「打断它」）`);
+        interruptBtn.disabled = false;
+        startBargeIn();
+      }
+      async function consume() {
+        if (consumerStarted) return;
+        beginSpeak();
+        let i = 0, bridges = 0;
+        const MAX_BRIDGES = 3;
+        while (true) {
+          if (myTurn !== turnSeq) return;                 // interrupted / reset
+          if (i >= ttsPromises.length) {
+            if (streamDone) break;
+            // 还没下一段音频——用过渡音填空档（已放过开场垫话后才填，最多几次），避免死寂
+            if (i > 0 && bridges < MAX_BRIDGES && !textOnly && !soulMode()) {
+              const burl = pickBridgeUrl();
+              if (burl) { bridges++; await playUrl(burl); continue; }
+            }
+            await sleep(40);
+            continue;
+          }
+          const url = await ttsPromises[i++].catch(() => null);
+          if (myTurn !== turnSeq) return;
+          bridges = 0;                                     // 真音频到了，重置过渡音预算
+          if (url) await playUrl(url);
+        }
+        finishTurn();
+      }
+
+      function finishTurn() {
+        if (myTurn !== turnSeq) return;
+        stopBargeIn();
+        bubble.classList.remove("speaking");
+        history.push({ role: "ai", text: bubbleText || "（无回复）" });
+        liveReplyText = "";   // 正常说完，清空，避免被后续 barge-in 重复入历史
+        interruptBtn.disabled = true;
+        if (textOnly || !stream) {
+          setMode("idle");
+          textRow.style.display = "flex";
+          setStatus(stream ? "接着说，或打字" : "打字发给它就行");
+          if (!stream) textInput.focus();
+        } else {
+          startListening();
+        }
+      }
+
+      const onSentence = (s, ttsP) => {
+        if (myTurn !== turnSeq) return;
+        if (turnT && !turnT.logged) {
+          turnT.logged = true;
+          const sil = Math.round(turnT.endpoint - turnT.silence);
+          const txt = Math.round((turnT.textReady || turnT.endpoint) - turnT.endpoint);
+          const snt = Math.round(performance.now() - turnT.endpoint);
+          console.log(`%c[计时] 说完→端点 ${sil}ms ┃ 端点→文字就绪 ${txt}ms ┃ 端点→首句 ${snt}ms ┃ 说完→首句合计 ${Math.round(performance.now() - turnT.silence)}ms`, "color:#0F6E56;font-weight:bold");
+        }
+        appendText(s);
+        if (silent) return;                       // 不出声：只显示文字，不合成/不播放
+        ttsPromises.push(ttsP || fetchTTS(s));   // reuse a draft's pre-started TTS when given
+        consume();
+      };
+
+      // 抢跑提交：草稿已经把回复流式生成 + 合成好了，直接回放（首声近乎即时，无需等模型）。
+      if (draft) {
+        if (!silent) { ttsPromises.push(fetchTTS("嗯，")); consume(); }  // 缓存命中的瞬时垫底
+        let k = 0;
+        while (true) {
+          if (myTurn !== turnSeq) { draft.aborted = true; return; }
+          if (k < draft.sentences.length) { onSentence(draft.sentences[k], draft.ttsPromises[k]); k++; }
+          else if (draft.done) break;
+          else await sleep(30);
+        }
+        streamDone = true;
+        if (silent) { finishTurn(); }
+        else if (!consumerStarted) { bubble.classList.remove("speaking"); if (mode !== "idle" && !textOnly) startListening(); else setMode("idle"); }
+        return;
+      }
+
+      try {
+        const resp = await fetch("/api/dialogue/stream", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ history: sentHistory, partner: partnerName(), botName: currentBot(), topic: currentTopic(), kbDir: currentKbDir(), free: currentFree(), soul: soulMode(), quickOpener: quickOpenerOn, style: convoStyle, format: undefined, dig: digBody() })
+        });
+        if (!resp.ok || !resp.body) throw new Error("stream " + resp.status);
+        const reader = resp.body.getReader();
+        const dec = new TextDecoder();
+        let buf = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (myTurn !== turnSeq) { reader.cancel(); return; }
+          buf += dec.decode(value, { stream: true });
+          let idx;
+          while ((idx = buf.indexOf("\n\n")) >= 0) {
+            const ev = buf.slice(0, idx); buf = buf.slice(idx + 2);
+            const line = ev.split("\n").find((l) => l.startsWith("data:"));
+            if (!line) continue;
+            let j; try { j = JSON.parse(line.slice(5).trim()); } catch { continue; }
+            if (j.filler) {
+              // instant "嗯…" feedback — played first, not shown as text, not in history
+              if (myTurn === turnSeq && !silent) { ttsPromises.push(fetchTTS(j.filler)); consume(); }
+            } else if (j.sentence) onSentence(j.sentence);
+            else if (j.error) setStatus("出错：" + j.error);
+          }
+        }
+        streamDone = true;
+        if (silent) { finishTurn(); }                      // 不出声：文字已流完，直接收尾
+        else if (!consumerStarted) {                       // model returned nothing
+          bubble.classList.remove("speaking");
+          if (mode !== "idle" && !textOnly) startListening();
+          else setMode("idle");
+        }
+      } catch (e) {
+        streamDone = true;
+        if (myTurn !== turnSeq) return;
+        setStatus("连接出错：" + e.message + "（可改用打字）");
+        textRow.style.display = "flex";
+        bubble.classList.remove("speaking");
+        if (!consumerStarted) setMode("idle");
+      }
+    }
+
+    // ---- user turn: record with adaptive silence auto-stop ----
+    let ending = false;   // set by 结束: makes the next onRecordingStop a no-op (cancel, not send)
+    let speechSeen = false;
+    let silenceStart = 0;
+    let turnT = null;   // 计时打点：说完→端点→文字就绪→首句
+    let forceSend = false;
+    let listenStartMs = 0;
+    // Speculative ASR: on the first ~0.5s pause we kick off recognition of the audio
+    // captured so far (in parallel). If the user resumes talking we discard it; if they
+    // were really done, the result is ready the instant the turn ends — no post-stop wait.
+    let specPromise = null, specFired = false, specInvalid = false;
+    let specText = "";   // 投机识别拿到的文字快照，用于语义端点判断
+    // 语义端点：看转写像不像说完了。结尾是连接词 → 还没说完，等满；否则（有实质文字、
+    // 不以连接词结尾）→ 看着说完了，可早切。纯读文字、不猜回复，所以不会答错；唯一风险是
+    // 偶尔把长句中途当成说完——靠"连接词结尾"和"太短不切"两道闸压低误切。
+    const INCOMPLETE_TAIL = /(的|和|跟|与|或|而|还有|而且|然后|接着|因为|所以|但是|不过|就是|那个|这个|要是|如果|的话|以及|包括|比如|首先|另外|一个|这种|那种|可能|觉得|就|还|想|要|是不是|有没有|嗯|呃|啊|那|这|然|其实|反正|主要|关键|首先是|一方面|另一方面|对于|关于|至于|为了|通过|根据|按照|当|在|把|被|给|让|对|向|跟着|也|都|很|更|最|挺|比较|有点|稍微|大概|差不多|应该|可以|能|会|得|去|来|说|讲|做|搞|弄|这样|那样|怎么|什么|哪|谁|多少|几|一些|一点|有些|包含)$/;
+    const looksComplete = (t) => !!t && t.length >= 2 && !INCOMPLETE_TAIL.test(t);
+
+    // ---- 抢跑（投机生成）：在投机识别拿到文字的那一刻，就提前让 LLM 把回复也生成好并
+    // 憋住。若你又开口 → 连同识别一起作废；若真说完了且最终文字一致 → 端点一到直接播这份
+    // 已生成的草稿，把"等你说完"同时和 ASR、LLM 两段重叠。默认关（较真分析可能基于不完整
+    // 的话抢跑）。靠右下角「抢跑」开关切换。----
+    let speculateGenOn = false;
+    let quickOpenerOn = false;   // 快嘴：快模型瞬时框架开场，盖住 Opus 首 token 等待（默认关）
+    let genDraft = null;   // { transcript, sentences:[], ttsPromises:[], done, aborted, controller }
+    const normT = (s) => (s || "").replace(/[\s，。！？、,.!?；;：:…—-]/g, "");
+
+    // ===== 流式 ASR（阶段1：观察用，默认关）=====
+    // 边说边把 16kHz PCM 推到现成的 WS 代理 /ws/asr/stream，累积 liveTranscript。本阶段只
+    // 累积+打点对比，不接管端点/抢跑/收尾——开/关都碰不到日常路径。验证可用后再进阶段2。
+    let streamAsrOn = true;   // 流式 ASR 现为默认文字来源（失败自动回落批量）；抢跑/快嘴已下线
+    let voiceOut = (localStorage.getItem("baiche_voiceout") ?? "1") !== "0";   // AI 出不出声（每轮都出文字，只控制要不要配音）
+    let convoStyle = {};      // 对话风格档位 {sharp,length,oral,warmth,lead}∈0/1/2，1=默认
+    try { convoStyle = JSON.parse(localStorage.getItem("baiche_style") || "{}") || {}; } catch {}
+    let asrWs = null, asrCtx = null, asrNodes = null;
+    let liveFinal = "", liveInterim = "", liveT0 = 0, liveFirstAt = 0, liveSentenceEndAt = 0;
+    const liveTranscript = () => (liveFinal + liveInterim).trim();
+    const genId = () => { try { return crypto.randomUUID(); } catch { return "id-" + Math.random().toString(16).slice(2); } };
+    function floatTo16BitPCM(f32) {
+      const o = new Int16Array(f32.length);
+      for (let i = 0; i < f32.length; i++) { const s = Math.max(-1, Math.min(1, f32[i])); o[i] = s < 0 ? s * 0x8000 : s * 0x7fff; }
+      return new Uint8Array(o.buffer);
+    }
+    function startStreamAsr() {
+      stopStreamAsr();
+      if (!streamAsrOn || !stream) return;
+      liveFinal = ""; liveInterim = ""; liveFirstAt = 0; liveSentenceEndAt = 0; liveT0 = performance.now();
+      let ws; try { const proto = location.protocol === "https:" ? "wss" : "ws"; ws = new WebSocket(`${proto}://${location.host}/ws/asr/stream`); } catch { return; }
+      ws.binaryType = "arraybuffer"; asrWs = ws;
+      const taskId = genId();
+      let pcmFrames = 0;
+      ws.addEventListener("open", () => {
+        try {
+          ws.send(JSON.stringify({ header: { name: "StartTranscription", message_id: genId(), task_id: taskId, namespace: "SpeechTranscriber", appkey: "default" }, payload: { format: "pcm", sample_rate: 16000, enable_intermediate_result: true, enable_punctuation_prediction: true, enable_inverse_text_normalization: true }, context: { sdk: { name: "baiche", version: "0.1.0", language: "javascript" } } }));
+          asrCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000, latencyHint: "interactive" });
+          const source = asrCtx.createMediaStreamSource(stream);
+          const proc = asrCtx.createScriptProcessor(2048, 1, 1);
+          proc.onaudioprocess = (e) => { if (ws.readyState === WebSocket.OPEN) ws.send(floatTo16BitPCM(e.inputBuffer.getChannelData(0))); };
+          source.connect(proc); proc.connect(asrCtx.destination); asrNodes = { source, proc };
+        } catch (e) { console.log("%c[流式] 采集出错：" + e.message, "color:#A32D2D"); }
+      });
+      ws.addEventListener("message", (ev) => {
+        if (typeof ev.data !== "string") return;
+        let m; try { m = JSON.parse(ev.data); } catch { return; }
+        const n = m.header?.name, r = m.payload?.result || "";
+        if (n === "TranscriptionResultChanged") { liveInterim = r; liveSentenceEndAt = 0; if (!liveFirstAt) { liveFirstAt = Math.round(performance.now() - liveT0); console.log("%c[流式] 首字 +" + liveFirstAt + "ms", "color:#7F77DD"); } }
+        else if (n === "SentenceEnd") { liveFinal = (liveFinal + r).trim(); liveInterim = ""; liveSentenceEndAt = performance.now(); }
+        else if (n === "TranscriptionFailed" || n === "TaskFailed") { console.log("%c[流式] 失败：" + (m.header?.status_message || "?"), "color:#A32D2D"); }
+      });
+      ws.addEventListener("error", () => console.log("%c[流式] WS error", "color:#A32D2D"));
+      ws.addEventListener("close", (e) => { if (e.code !== 1000 && e.code !== 1005) console.log("%c[流式] WS 异常关闭 code=" + e.code, "color:#BA7517"); });
+    }
+    function stopStreamAsr() {
+      try { if (asrNodes) { asrNodes.proc.disconnect(); asrNodes.source.disconnect(); asrNodes.proc.onaudioprocess = null; } } catch {}
+      asrNodes = null;
+      try { if (asrCtx) asrCtx.close(); } catch {} asrCtx = null;
+      const ws = asrWs; asrWs = null;
+      if (ws) { try { if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ header: { name: "StopTranscription", message_id: genId(), namespace: "SpeechTranscriber", appkey: "default" }, context: {} })); } catch {} setTimeout(() => { try { ws.close(); } catch {} }, 300); }
+    }
+    function genStreamBody(transcriptText) {
+      const sentHistory = history.concat([{ role: "s", text: transcriptText }]);
+      return JSON.stringify({ history: sentHistory, partner: partnerName(), botName: currentBot(), topic: currentTopic(), kbDir: currentKbDir(), free: currentFree(), soul: soulMode(), quickOpener: quickOpenerOn, style: convoStyle, format: undefined, dig: digBody() });
+    }
+    function startGenSpeculation(transcriptText) {
+      cancelGenSpeculation();
+      const draft = { transcript: transcriptText, sentences: [], ttsPromises: [], done: false, aborted: false, controller: new AbortController(), t0: performance.now(), firstAt: 0 };
+      genDraft = draft;
+      console.log(`%c[抢跑] 起跑 →「${transcriptText}」`, "color:#1D9E75");
+      (async () => {
+        try {
+          const resp = await fetch("/api/dialogue/stream", { method: "POST", headers: { "content-type": "application/json" }, body: genStreamBody(transcriptText), signal: draft.controller.signal });
+          if (!resp.ok || !resp.body) { draft.done = true; return; }
+          const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = "";
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (draft.aborted) { try { reader.cancel(); } catch {} return; }
+            buf += dec.decode(value, { stream: true });
+            let idx;
+            while ((idx = buf.indexOf("\n\n")) >= 0) {
+              const ev = buf.slice(0, idx); buf = buf.slice(idx + 2);
+              const line = ev.split("\n").find((l) => l.startsWith("data:"));
+              if (!line) continue;
+              let j; try { j = JSON.parse(line.slice(5).trim()); } catch { continue; }
+              if (j.sentence && !draft.aborted) {
+                if (!draft.firstAt) draft.firstAt = Math.round(performance.now() - draft.t0);
+                draft.sentences.push(j.sentence); draft.ttsPromises.push(fetchTTS(j.sentence));
+              }
+            }
+          }
+          draft.done = true;
+          if (!draft.aborted) console.log(`%c[抢跑] 草稿就绪 ${draft.sentences.length}句（首句+${draft.firstAt}ms 全程+${Math.round(performance.now()-draft.t0)}ms）`, "color:#1D9E75");
+        } catch { draft.done = true; }
+      })();
+    }
+    function cancelGenSpeculation() {
+      if (genDraft && !genDraft.aborted) {
+        console.log(`%c[抢跑] ✗作废（你又开口/重置）— 浪费已生成${genDraft.sentences.length}句`, "color:#BA7517");
+        genDraft.aborted = true; try { genDraft.controller.abort(); } catch {}
+      }
+      genDraft = null;
+    }
+
+    function fireSpeculative() {
+      if (!recorder || recorder.state !== "recording") return;
+      try { recorder.requestData(); } catch {}   // flush current data into chunks
+      setTimeout(() => {
+        if (specInvalid || !recorder) return;
+        const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+        if (!blob.size) return;
+        console.log(`[spec] fired @${blob.size}B`);
+        specPromise = fetch("/api/dialogue/listen?spec=1", {
+          method: "POST", headers: { "content-type": blob.type || "audio/webm" }, body: blob
+        }).then(async (r) => {
+          const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || "识别失败");
+          const text = (d.text || "").trim();
+          if (!specInvalid) specText = text;   // 语义端点用它判断是否说完
+          // 抢跑：识别一出文字，立刻拿它去提前生成回复（憋住不播）。流式开时改由 VAD 暂停起点
+          // 用 liveTranscript 提前起跑（更早、有提前量），这里就不再用批量识别触发，避免双发。
+          if (text && speculateGenOn && !specInvalid && !streamAsrOn) startGenSpeculation(text);
+          return text;
+        }).catch(() => null);
+      }, 60);
+    }
+
+    function startListening() {
+      if (!stream) return;
+      ending = false;   // fresh listen — clear any stale cancel flag
+      stopBargeIn();
+      setMode("listening");
+      setStatus("在听你说…（说完停一下我就接，或点按钮立即发送）", true);
+      interruptBtn.disabled = true;
+      chunks = [];
+      forceSend = false;
+      const mime = pickMime();
+      recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+      recorder.onstop = onRecordingStop;
+      recorder.start();
+      startStreamAsr();   // 阶段1：并行流式采集（仅观察，默认关）
+      runVAD();
+    }
+
+    const BARS = "▁▂▃▄▅▆▇█";
+    const VAD_INTERVAL = 100;   // ms; setInterval keeps firing in background tabs (unlike rAF)
+    function runVAD() {
+      speechSeen = false;
+      silenceStart = 0;
+      specPromise = null; specFired = false; specInvalid = false; specText = ""; cancelGenSpeculation();
+      const buf = new Uint8Array(analyser.fftSize);
+      // HANG: how long a pause counts as "turn over". Cut from 2.2s → 1.3s. The real
+      // latency win comes from SPEC_AT below (recognize during the pause, not after).
+      // HANG = 默认/未知；HANG_FAST = 看着说完了就早切（可用 localStorage.baiche_hangfast 调）；
+      // HANG_LONG = 明显半句（连接词结尾）多等。早切只在投机识别已出、且不像半句时才发生。
+      const HANG = 1500, MAXMS = 60000;
+      const HANG_FAST = Number(localStorage.getItem("baiche_hangfast")) || 1100;
+      const HANG_LONG = 2000, SPEC_AT = 480;
+      // 说太短就别早切：边想边说的人开头那几个字常被当成"完整短句"。
+      // 累计有声 < 此值时，一律走默认 HANG，不允许 650 快切误伤。
+      const MIN_VOICED_FOR_FAST = 1500;
+      function endpointHang() {
+        // 整段说得还很短 → 大概率只是开了个头在想词，别早切
+        if (voicedMs < MIN_VOICED_FOR_FAST) return HANG;
+        if (streamAsrOn) {
+          // 用带标点的实时转写判完整性。
+          // SentenceEnd 早切真机赶不上（ASR 仍滞后），已弃用。
+          const t = liveTranscript();
+          if (!t || t.length < 4) return HANG;
+          if (INCOMPLETE_TAIL.test(t)) return HANG_LONG;    // 连接词结尾 → 还在说，等满
+          return HANG_FAST;                                  // 看着说完了 → 快切
+        }
+        // 非流式：老逻辑（批量投机识别快照）
+        const t = specInvalid ? "" : specText;
+        if (!t || t.length < 4) return HANG;
+        if (INCOMPLETE_TAIL.test(t)) return HANG_LONG;
+        return HANG_FAST;
+      }
+      const t0 = performance.now();
+      listenStartMs = t0;
+      let lastTick = t0;
+      // calibrate ambient noise floor over first 500ms
+      let calibrating = true, calibSum = 0, calibN = 0, threshold = 0.014, voicedMs = 0;
+
+      // Hard backstop: guaranteed to fire even if the interval is throttled — never stuck.
+      if (hardStopTimer) clearTimeout(hardStopTimer);
+      hardStopTimer = setTimeout(() => stopListening(true), MAXMS + 800);
+
+      const tick = () => {
+        if (!recorder || recorder.state !== "recording") return;
+        analyser.getByteTimeDomainData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; sum += v * v; }
+        const rms = Math.sqrt(sum / buf.length);
+        const now = performance.now();
+        const dt = now - lastTick; lastTick = now;
+
+        if (calibrating) {
+          calibSum += rms; calibN++;
+          if (now - t0 > 700) {
+            const floor = calibN ? calibSum / calibN : 0.01;
+            // adapt to room/mic, but CAP it so a noisy/echoey moment can't lock out a normal voice.
+            // 倍数 2.2→1.8、上限 0.05→0.04：阈值更贴底噪，正常说话不易被算作静音。
+            threshold = Math.min(0.04, Math.max(0.011, floor * 1.8 + 0.004));
+            calibrating = false;
+          }
+          setStatus("在听你说…（正在适应环境噪音，请稍候半秒）", true);
+          return;
+        }
+
+        // live volume meter so it's obvious whether the mic hears you
+        const lvl = Math.max(0, Math.min(7, Math.round((rms / (threshold * 2.2)) * 7)));
+        const meter = BARS.slice(lvl, lvl + 1).repeat(1);
+        // 流式：把实时转写直接上屏（你立刻看到"它在听、听对了"）；没字时退回音量条
+        const lt = streamAsrOn ? liveTranscript() : "";
+        setStatus(lt ? `🎙 ${lt}` : `在听你说…  音量 ${meter}${rms > threshold ? "（听到了）" : ""}`, true);
+
+        if (rms > threshold) {
+          if (specFired) { specInvalid = true; specText = ""; cancelGenSpeculation(); }   // resumed → discard spec recog + gen + stale text
+          speechSeen = true; voicedMs += dt; silenceStart = 0;
+        }
+        else if (speechSeen && voicedMs > 350) {
+          // only end after we've heard real speech (≥350ms voiced) AND a long enough pause
+          if (!silenceStart) {
+            silenceStart = now;
+            // 流式+抢跑：一停顿就用实时转写提前起跑（这才有真提前量——文字早就在了，不必等批量）
+            if (streamAsrOn && speculateGenOn) {
+              const lt = liveTranscript();
+              if (lt.length >= 4 && looksComplete(lt) && (!genDraft || normT(genDraft.transcript) !== normT(lt))) startGenSpeculation(lt);
+            }
+          }
+          else {
+            const sil = now - silenceStart;
+            if (!specFired && sil > SPEC_AT) { specFired = true; fireSpeculative(); }
+            if (sil > endpointHang()) { stopListening(); return; }
+          }
+        }
+        if (now - t0 > MAXMS) { stopListening(); return; }
+      };
+      vadTimer = setInterval(tick, VAD_INTERVAL);
+    }
+
+    function stopListening(manual) {
+      if (manual) forceSend = true;
+      if (recorder && recorder.state === "recording") {
+        turnT = { silence: silenceStart || performance.now(), endpoint: performance.now(), logged: false };
+      }
+      if (vadTimer) clearInterval(vadTimer);
+      vadTimer = null;
+      if (hardStopTimer) { clearTimeout(hardStopTimer); hardStopTimer = null; }
+      if (recorder && recorder.state === "recording") recorder.stop();
+    }
+
+    async function onRecordingStop() {
+      if (ending) { ending = false; return; }   // 结束按下：丢弃这段、不识别、不接话
+      // send if we heard speech OR the user explicitly tapped to send — as long as there's audio
+      if (!chunks.length || (!speechSeen && !forceSend)) {
+        if (mode === "listening") startListening();
+        return;
+      }
+      setMode("thinking");
+      setStatus("在识别你说的话…");
+      let text = "";
+      const tStop = performance.now();
+      // 流式开：实时转写在端点时刻早已就绪（还带标点），直接用，省掉批量识别整轮往返。
+      if (streamAsrOn) {
+        const lt = liveTranscript();
+        if (lt) { text = lt; console.log(`%c[流式] 用作最终文字「${lt}」（首字+${liveFirstAt || "—"}ms，省掉批量往返）`, "color:#7F77DD;font-weight:bold"); }
+        stopStreamAsr();
+      }
+      try {
+        // Fast path: if we fired a speculative recognition during the pause and the user
+        // didn't resume talking, its result is already in flight / done — use it instantly.
+        if (text) {
+          // 已由流式拿到文字，跳过批量
+        } else if (specPromise && !specInvalid) {
+          text = (await specPromise) || "";
+          console.log(`[spec] ${text ? "USED ✓ (hit)" : "empty→fallback"} +${Math.round(performance.now() - tStop)}ms`);
+        } else if (specFired) {
+          console.log("[spec] WASTED (user resumed) → full ASR");
+        } else {
+          console.log("[spec] not fired (pause < 480ms) → full ASR");
+        }
+        if (!text) {   // no usable speculative result → recognize the full audio
+          const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+          const r = await fetch("/api/dialogue/listen?spec=0", {
+            method: "POST", headers: { "content-type": blob.type || "audio/webm" }, body: blob
+          });
+          const data = await r.json();
+          if (!r.ok) throw new Error(data.error || "识别失败");
+          text = (data.text || "").trim();
+          console.log(`[spec] full ASR done +${Math.round(performance.now() - tStop)}ms`);
+        }
+      } catch (e) {
+        setStatus("识别出错：" + e.message + "（可改用打字）");
+        textRow.style.display = "flex";
+        if (mode !== "idle") startListening();
+        return;
+      }
+      if (!text) {
+        setStatus("没听清，麻烦再说一遍～（说大声点，或点「打字」）", true);
+        textRow.style.display = "flex";
+        if (mode !== "idle") startListening();
+        return;
+      }
+      if (turnT) turnT.textReady = performance.now();   // 计时：文字就绪
+      // 抢跑：若已提前生成回复、且最终文字与抢跑所用文字一致，直接播这份草稿（省掉模型等待）
+      let draft = null;
+      if (speculateGenOn && genDraft && !genDraft.aborted && normT(genDraft.transcript) === normT(text)) {
+        draft = genDraft; genDraft = null;
+        const overlap = Math.round(performance.now() - draft.t0);  // 起跑到提交的重叠时间≈省下的等待
+        console.log(`%c[抢跑] ✅命中！提交草稿（已就绪${draft.sentences.length}句, 完成=${draft.done}, 起跑→提交重叠${overlap}ms≈省下约这么多）`, "color:#185FA5;font-weight:bold");
+      } else if (speculateGenOn && genDraft) {
+        console.log(`%c[抢跑] ✗未命中：文字对不上 草稿「${genDraft.transcript}」≠ 实际「${text}」→ 重新生成`, "color:#A32D2D");
+        cancelGenSpeculation();
+      } else if (speculateGenOn) {
+        console.log(`%c[抢跑] —未起跑（停顿太短没触发投机识别 / 识别没出文字）`, "color:#888");
+        cancelGenSpeculation();
+      } else {
+        cancelGenSpeculation();
+      }
+      history.push({ role: "s", text });
+      addMsg("me", text);
+      botTurn(draft);
+    }
+
+    function sendUserText(text) {
+      text = (text || "").trim();
+      if (!text) return;
+      if (duoOn) { duoInterject(text); return; }   // in podcast mode, your line joins the convo
+      stopListening();
+      resetBtn.disabled = false;
+      history.push({ role: "s", text });
+      addMsg("me", text);
+      botTurn();
+    }
+
+    // ---- controls ----
+    orb.addEventListener("click", async () => {
+      if (appMode === "duo") { duoOn ? exitDuo() : enterDuo(); return; }
+      if (appMode === "listen") { listenOn ? stopListenMode() : startListenMode(); return; }
+      // 1on1 and round share the same mic loop (round just adds a roundtable framing)
+      if (mode === "idle") {
+        const micOk = await ensureMic();
+        if (micOk && audioCtx.state === "suspended") await audioCtx.resume();
+        textOnly = !micOk; // mic blocked → keep going in text mode
+        resetBtn.disabled = false;
+        startEpisode();
+        setMode("thinking");
+        botTurn();
+      } else if (mode === "listening") {
+        stopListening(true); // force-send what I've said now
+      } else if (mode === "thinking" || mode === "speaking") {
+        // 点光球 = 打断它，把话筒交回给你（取代已删的「打断它」按钮）
+        turnSeq++;
+        cancelGenSpeculation();
+        if (liveReplyText.trim()) { history.push({ role: "ai", text: liveReplyText.trim() + "……（被打断）" }); liveReplyText = ""; }
+        if (currentAudio) { try { currentAudio.pause(); currentAudio.src = ""; } catch {} currentAudio = null; }
+        if (!textOnly) startListening(); else setMode("idle");
+      }
+    });
+
+    // ---- interaction mode selector ----
+    const MODE_HINT = {
+      "self": "和你自己聊（斯坦利）。点光球开始，它先开口，说完自动听你说，你停顿一下它就接话；说话时直接开口可插话。",
+      "other": "让 AI 跟别人聊。先在右上填「对谈对象」的称呼，再点光球开始——它会记住每个人各自的事，不串。",
+      "duo": "点「开播」，爽姐主持、老根做客，就当前知识库录一期《掰扯》——有片头报幕、聊够 15 分钟自然收尾，片头片尾有音乐。你旁听，想插话就打字。"
+    };
+    // 待机提示：上方随机一条知识库金句（有启发·关于人生认知），下方一小行当前配置。
+    let hintToken = 0;
+    function idleConfigLine() {
+      const kb = escapeHtml((activeKB() || {}).label || "");
+      const kbPart = kb ? ` · 挂着「${kb}」` : "";
+      if (appMode === "duo") return MODE_HINT.duo;
+      if (appMode === "dig") {
+        const who = escapeHtml((partnerNameInput.value || "").trim());
+        return `代你抠 ${who || "下属"} 的材料${kbPart} · ${who ? "" : "先填「对谈对象」，"}点光球开始`;
+      }
+      if (appMode === "other") {
+        const who = escapeHtml((partnerNameInput.value || "").trim());
+        return `和 ${who || "他人"} 聊${kbPart} · ${who ? "" : "先填「对谈对象」，"}点光球开始`;
+      }
+      return `和自己（斯坦利）${kbPart} · 点光球开始`;
+    }
+    const SHEN_IDLE = [
+      "深水玄色，冬藏。抛个话头下来。",
+      "在。你说，我听。",
+      "这口磬，等你敲。",
+      "不为填补什么。你来，是要照见抛话头的人。",
+      "想清楚了再开口，也可以先沉一会儿。",
+    ];
+    function showIdleHint() {
+      if (appMode === "shen") {
+        const line = SHEN_IDLE[Math.floor(Math.random() * SHEN_IDLE.length)];
+        log.innerHTML = `<div class="hint"><div style="font-family:var(--serif); font-size:20px; line-height:1.85; color:#aeb8c6;">${line}</div><div style="font-size:12.5px; color:#5b6573; margin-top:12px; letter-spacing:1px;">沉思素 · 点光球开始</div></div>`;
+        return;
+      }
+      const cfg = idleConfigLine();
+      const my = ++hintToken;
+      log.innerHTML = `<div class="hint">${cfg}</div>`;
+      if (appMode === "duo") return;   // 播客模式不抽金句
+      fetch("/api/dialogue/quote", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kbDir: currentKbDir(), free: currentFree() }) })
+        .then((r) => r.json()).then((d) => {
+          if (my !== hintToken || mode !== "idle" || !d || !d.quote) return;
+          log.innerHTML = `<div class="hint"><div style="font-family:var(--serif); font-size:20px; line-height:1.75; color:var(--ink);">“${escapeHtml(d.quote)}”</div><div style="font-size:12.5px; color:var(--muted); margin-top:12px;">${cfg}</div></div>`;
+        }).catch(() => {});
+    }
+    const modesEl = document.getElementById("modes");
+    function switchMode(m) {
+      if (m === appMode) return;
+      // stop whatever's running
+      turnSeq++;
+      cancelGenSpeculation();
+      stopStreamAsr();
+      if (duoOn) exitDuo();
+      if (listenOn) stopListenMode();
+      stopListening();
+      if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; }
+      history = [];
+      appMode = m;
+      [...modesEl.children].forEach((b) => b.classList.toggle("on", b.dataset.mode === m));
+      // 音色/风格在「和自己聊」「和他人聊」都显示；对谈对象输入框只在「和他人聊」显示（默认放空）
+      document.getElementById("oneOnOne").classList.toggle("hide", m === "duo");
+      document.getElementById("partnerLabel").classList.toggle("hide", m !== "other" && m !== "dig");
+      if (m === "other" || m === "dig") partnerNameInput.value = "";   // 和他人聊 / 抠材料：对象默认放空，等你填
+      document.getElementById("duoOnly").classList.toggle("hide", m !== "duo");
+      // 「聆听」：用专属面板替换对话流，隐藏对话用的控制条
+      const isListen = m === "listen";
+      // 聆听不读知识库、没有 AI 角色，藏掉知识库下拉和「＋」
+      kbSelect.classList.toggle("hide", isListen);
+      document.getElementById("kbAdd").classList.toggle("hide", isListen);
+      document.getElementById("listenPanel").classList.toggle("show", isListen);
+      if (isListen) renderListen();
+      log.style.display = isListen ? "none" : "";
+      document.querySelector(".console").classList.toggle("hide-controls", isListen);
+      // 沉思素：玄水沉色，藏掉知识库/音色/对谈对象等无关控件
+      const isShen = m === "shen";
+      document.body.classList.toggle("shen", isShen);
+      shenBtn?.classList.toggle("on", isShen);
+      if (isShen) {
+        kbSelect.classList.add("hide");
+        document.getElementById("kbAdd").classList.add("hide");
+        document.getElementById("oneOnOne").classList.add("hide");
+        document.getElementById("partnerLabel").classList.add("hide");
+        document.getElementById("duoOnly").classList.add("hide");
+      } else if (!isListen) {
+        kbSelect.classList.remove("hide");
+        document.getElementById("kbAdd").classList.remove("hide");
+      }
+      setMode("idle");
+      interruptBtn.disabled = true;
+      textRow.style.display = "none";
+      orb.classList.remove("thinking");
+      orb.textContent = m === "duo" ? "开播" : "开始";
+      setStatus("");
+      // 抠材料：进来先开台（填对象+材料+备料），备好前不进对话
+      digCtx = { ready: false, boss: "我", partner: "", materialTitle: "", materialText: "", kbDir: "", checklist: [] };
+      document.getElementById("digPanel").classList.toggle("show", m === "dig");
+      log.style.display = (m === "dig") ? "none" : log.style.display;
+      if (m === "dig") { renderDigSetup(); return; }
+      showIdleHint();
+    }
+    modesEl.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-mode]");
+      if (b) switchMode(b.dataset.mode);
+    });
+    const shenBtn = document.getElementById("shenBtn");   // 入口暂撤；底层沉思素代码保留
+    shenBtn?.addEventListener("click", () => switchMode(appMode === "shen" ? "self" : "shen"));
+
+    interruptBtn.addEventListener("click", () => {
+      turnSeq++; // cancel the in-flight streaming turn (stops queued sentences/playback)
+      cancelGenSpeculation();
+      if (liveReplyText.trim()) { history.push({ role: "ai", text: liveReplyText.trim() + "……（被打断）" }); liveReplyText = ""; }
+      if (currentAudio) { currentAudio.pause(); currentAudio.src = ""; currentAudio = null; }
+      interruptBtn.disabled = true;
+      if (!textOnly) startListening();
+      else setMode("idle");
+    });
+
+    textToggle.addEventListener("click", () => {
+      textRow.style.display = textRow.style.display === "none" ? "flex" : "none";
+      if (textRow.style.display === "flex") textInput.focus();
+    });
+    // 开麦打断常开（默认就能直接说话打断）；「打断它」按钮多余 → 隐藏。
+    function syncInterruptBtn() { interruptBtn.classList.toggle("hide", true); }
+    syncInterruptBtn();
+    showIdleHint();   // 进页面就显示"当前配置"动态提示
+    // ---- 对话风格面板（5 维各 3 档，中档=默认）----
+    const STYLE_DEFS = [
+      { key: "sharp",  label: "锋芒", opts: ["温和", "适中", "犀利"] },
+      { key: "length", label: "话量", opts: ["极简", "适中", "详尽"] },
+      { key: "oral",   label: "口语", opts: ["书面", "适中", "大白话"] },
+      { key: "warmth", label: "温度", opts: ["冷静", "适中", "热络"] },
+      { key: "lead",   label: "主导", opts: ["多听", "适中", "带节奏"] }
+    ];
+    const stylePanel = document.getElementById("stylePanel");
+    const styleRows = document.getElementById("styleRows");
+    function renderStyle() {
+      styleRows.innerHTML = "";
+      for (const d of STYLE_DEFS) {
+        const cur = (convoStyle[d.key] == null) ? 1 : Number(convoStyle[d.key]);
+        const row = document.createElement("div"); row.className = "style-row";
+        row.innerHTML = `<span class="lbl">${d.label}</span><div class="style-chips">` +
+          d.opts.map((o, i) => `<button data-k="${d.key}" data-v="${i}"${i === cur ? ' class="on"' : ""}>${o}</button>`).join("") + `</div>`;
+        styleRows.appendChild(row);
+      }
+    }
+    styleRows.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-k]"); if (!b) return;
+      convoStyle[b.dataset.k] = Number(b.dataset.v);
+      try { localStorage.setItem("baiche_style", JSON.stringify(convoStyle)); } catch {}
+      renderStyle();
+    });
+    document.getElementById("styleBtn").addEventListener("click", () => { renderStyle(); stylePanel.classList.toggle("open"); });
+    document.getElementById("styleClose").addEventListener("click", () => stylePanel.classList.remove("open"));
+    // ⚙ 设置：开关；点里面的子项（风格/加库/存档）顺手收起设置面板
+    const settingsPanel = document.getElementById("settingsPanel");
+    const voiceOutBtn = document.getElementById("voiceOutBtn");
+    const syncVoiceOut = () => { voiceOutBtn.textContent = voiceOut ? "🔊" : "🔇"; voiceOutBtn.title = voiceOut ? "出声中（点击静音）" : "静音中（点击出声）"; voiceOutBtn.style.opacity = voiceOut ? "1" : ".5"; };
+    syncVoiceOut();
+    voiceOutBtn.addEventListener("click", () => { voiceOut = !voiceOut; try { localStorage.setItem("baiche_voiceout", voiceOut ? "1" : "0"); } catch {} syncVoiceOut(); });
+    document.getElementById("settingsBtn").addEventListener("click", () => settingsPanel.classList.toggle("open"));
+    ["styleBtn", "kbAdd", "archiveBtn"].forEach((id) => document.getElementById(id).addEventListener("click", () => settingsPanel.classList.remove("open")));
+    // 点弹窗外的任意处 → 收起对应弹窗（[面板, 它的触发按钮]）
+    const POPOVERS = [["settingsPanel", "settingsBtn"], ["stylePanel", "styleBtn"], ["kbPanel", "kbAdd"], ["archivePanel", "archiveBtn"], ["profilePanel", "profiles"]];
+    document.addEventListener("click", (e) => {
+      for (const [pid, bid] of POPOVERS) {
+        const p = document.getElementById(pid);
+        if (p && p.classList.contains("open") && !e.target.closest("#" + pid) && !e.target.closest("#" + bid)) p.classList.remove("open");
+      }
+    });
+    document.getElementById("styleReset").addEventListener("click", () => { convoStyle = {}; try { localStorage.setItem("baiche_style", "{}"); } catch {} renderStyle(); });
+
+    // ===== 场景/人设：每个场景自带【知识库+模式+音色+风格】，在面板里直接配 =====
+    const PROFILE_EMOJIS = ["🧘", "💼", "📚", "🎯", "🌙", "🔥", "🧠", "💡", "☕", "🎨", "🗣️", "🧩"];
+    let profiles = [];
+    try { profiles = JSON.parse(localStorage.getItem("baiche_profiles") || "[]") || []; } catch {}
+    let activeProfileId = null;
+    let editingId = null, editEmoji = PROFILE_EMOJIS[0], editMode = "self", editStyle = {};
+    const profilesEl = document.getElementById("profiles");
+    const profilePanel = document.getElementById("profilePanel");
+    const profMgr = document.getElementById("profMgr");
+    const profName = document.getElementById("profName");
+    const emojiPick = document.getElementById("emojiPick");
+    const profStatus = document.getElementById("profStatus");
+    const profKb = document.getElementById("profKb");
+    const profVoice = document.getElementById("profVoice");
+    const profModes = document.getElementById("profModes");
+    const profStyleEl = document.getElementById("profStyle");
+    const profDelete = document.getElementById("profDelete");
+    const profEditTitle = document.getElementById("profEditTitle");
+    const saveProfiles = () => { try { localStorage.setItem("baiche_profiles", JSON.stringify(profiles)); } catch {} };
+
+    function renderProfiles() {
+      profilesEl.innerHTML = "";
+      profiles.forEach((p) => {
+        const b = document.createElement("button"); b.className = "prof" + (p.id === activeProfileId ? " on" : ""); b.title = p.name;
+        b.innerHTML = `<span class="av">${p.emoji || "🙂"}</span><span class="nm">${escapeHtml(p.name)}</span>`;
+        b.addEventListener("click", () => applyProfile(p));
+        profilesEl.appendChild(b);
+      });
+      const add = document.createElement("button"); add.className = "prof prof-add"; add.title = "新建/管理场景";
+      add.innerHTML = `<span class="av">＋</span><span class="nm">场景</span>`;
+      add.addEventListener("click", openProfilePanel);
+      profilesEl.appendChild(add);
+    }
+    function applyProfile(p) {
+      if (p.mode && p.mode !== appMode) switchMode(p.mode);
+      if (p.kbLabel) { const i = KBS.findIndex((k) => k.label === p.kbLabel); if (i >= 0) { kbIdx = i; renderKbSelect(); } }
+      if (typeof p.voiceIdx === "number" && VOICES[p.voiceIdx]) { voiceIdx = p.voiceIdx; voiceSelect.value = String(voiceIdx); }
+      convoStyle = Object.assign({}, p.style || {}); try { localStorage.setItem("baiche_style", JSON.stringify(convoStyle)); } catch {}
+      activeProfileId = p.id; renderProfiles();
+      if (mode === "idle") showIdleHint();
+    }
+    // ---- 编辑器 ----
+    function fillProfSelects() {
+      profKb.innerHTML = ""; KBS.forEach((k) => profKb.appendChild(new Option((k.free ? "💬 " : "📚 ") + k.label, k.label)));
+      profVoice.innerHTML = ""; VOICES.forEach((v, i) => profVoice.appendChild(new Option("🔊 " + v.label, String(i))));
+    }
+    function renderEmojiPick() {
+      emojiPick.innerHTML = "";
+      PROFILE_EMOJIS.forEach((e) => { const b = document.createElement("button"); b.textContent = e; if (e === editEmoji) b.className = "on"; b.addEventListener("click", () => { editEmoji = e; renderEmojiPick(); }); emojiPick.appendChild(b); });
+    }
+    function renderProfModes() { [...profModes.children].forEach((b) => b.classList.toggle("on", b.dataset.m === editMode)); }
+    function renderProfStyle() {
+      profStyleEl.innerHTML = "";
+      for (const d of STYLE_DEFS) {
+        const cur = (editStyle[d.key] == null) ? 1 : Number(editStyle[d.key]);
+        const row = document.createElement("div"); row.className = "style-row";
+        row.innerHTML = `<span class="lbl">${d.label}</span><div class="style-chips">` + d.opts.map((o, i) => `<button data-k="${d.key}" data-v="${i}"${i === cur ? ' class="on"' : ""}>${o}</button>`).join("") + `</div>`;
+        profStyleEl.appendChild(row);
+      }
+    }
+    profStyleEl.addEventListener("click", (e) => { const b = e.target.closest("button[data-k]"); if (!b) return; editStyle[b.dataset.k] = Number(b.dataset.v); renderProfStyle(); });
+    profModes.addEventListener("click", (e) => { const b = e.target.closest("button[data-m]"); if (!b) return; editMode = b.dataset.m; renderProfModes(); });
+    function loadEditor(p) {
+      fillProfSelects();
+      if (p) { editingId = p.id; profName.value = p.name || ""; editEmoji = p.emoji || PROFILE_EMOJIS[0]; editMode = p.mode || "self"; editStyle = Object.assign({}, p.style || {}); profKb.value = p.kbLabel || (KBS[0] || {}).label; profVoice.value = String(typeof p.voiceIdx === "number" ? p.voiceIdx : 0); profEditTitle.textContent = "编辑：" + p.name; profDelete.style.display = ""; }
+      else { editingId = null; profName.value = ""; editEmoji = PROFILE_EMOJIS[0]; editMode = appMode === "duo" ? "duo" : appMode; editStyle = Object.assign({}, convoStyle); profKb.value = (activeKB() || {}).label || (KBS[0] || {}).label; profVoice.value = String(voiceIdx); profEditTitle.textContent = "新建场景"; profDelete.style.display = "none"; }
+      renderEmojiPick(); renderProfModes(); renderProfStyle();
+    }
+    function renderProfMgr() {
+      profMgr.innerHTML = "";
+      if (!profiles.length) { profMgr.innerHTML = `<div style="font-size:12.5px;color:var(--muted);padding:2px 0 6px;">还没有场景。在下面配好「知识库/模式/音色/风格」，保存就有了。</div>`; return; }
+      profiles.forEach((p) => {
+        const row = document.createElement("div"); row.className = "prof-mgr-item" + (p.id === editingId ? " on" : "");
+        const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = `${p.emoji || "🙂"} ${p.name}`; nm.title = "点开编辑"; nm.addEventListener("click", () => loadEditor(p));
+        const del = document.createElement("button"); del.className = "del"; del.textContent = "🗑"; del.title = "删除";
+        del.addEventListener("click", () => { const i = profiles.findIndex((x) => x.id === p.id); if (i < 0) return; profiles.splice(i, 1); if (activeProfileId === p.id) activeProfileId = null; if (editingId === p.id) loadEditor(null); saveProfiles(); renderProfMgr(); renderProfiles(); });
+        row.appendChild(nm); row.appendChild(del); profMgr.appendChild(row);
+      });
+    }
+    function openProfilePanel() { renderProfMgr(); loadEditor(null); profStatus.textContent = ""; profStatus.className = ""; profilePanel.classList.add("open"); }
+    document.getElementById("profClose").addEventListener("click", () => profilePanel.classList.remove("open"));
+    profDelete.addEventListener("click", () => {
+      if (!editingId) return;
+      const i = profiles.findIndex((x) => x.id === editingId); if (i < 0) return;
+      if (activeProfileId === editingId) activeProfileId = null;
+      profiles.splice(i, 1); saveProfiles(); renderProfiles(); loadEditor(null); renderProfMgr();
+    });
+    document.getElementById("profSave").addEventListener("click", () => {
+      const name = (profName.value || "").trim();
+      if (!name) { profStatus.textContent = "起个名字。"; profStatus.className = "err"; return; }
+      const data = { name, emoji: editEmoji, kbLabel: profKb.value, voiceIdx: Number(profVoice.value) || 0, mode: editMode, style: Object.assign({}, editStyle) };
+      if (editingId) { const p = profiles.find((x) => x.id === editingId); if (p) Object.assign(p, data); }
+      else { const p = Object.assign({ id: genId() }, data); profiles.push(p); editingId = p.id; profEditTitle.textContent = "编辑：" + name; profDelete.style.display = ""; }
+      saveProfiles(); renderProfiles(); renderProfMgr();
+      profStatus.textContent = "已保存：" + name + "（点上方头像即可切换）"; profStatus.className = "ok";
+    });
+    renderProfiles();
+
+    textInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.isComposing) { sendUserText(textInput.value); textInput.value = ""; }
+    });
+
+    // 结束：干净收尾——停麦、停播放、清历史，回到待机（再点光球即重新开始）
+    resetBtn.addEventListener("click", () => {
+      turnSeq++; // cancel any in-flight streaming turn
+      cancelGenSpeculation();
+      stopStreamAsr();
+      ending = (mode === "listening");  // only arm if a recorder is pending (its onstop must discard)
+      stopListening();
+      stopBargeIn();
+      if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; }
+      // 沉淀长期记忆：抽取本次新事实 → 弹卡片让你过目确认（删/改）→ 你点保存才落盘
+      const convo = history.filter((m) => m && m.text);
+      const wasShen = soulMode();
+      const memCtx = { kbDir: currentKbDir(), free: currentFree(), partner: partnerName(), topic: currentTopic() };
+      history = [];
+      setMode("idle");
+      interruptBtn.disabled = true;
+      resetBtn.disabled = true;
+      textRow.style.display = "none";
+      if (wasShen) {
+        // 沉思素：把这次对谈全文落到 沉思素/records，不抽记忆卡
+        log.innerHTML = '<div class="hint">收了。点光球，再来。</div>';
+        setStatus("已收");
+        if (convo.filter((m) => m.role === "s").length >= 1) {
+          fetch("/api/shen/save", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ transcript: convo }) })
+            .then((r) => r.json()).then((d) => { if (d && d.ok) setStatus("已收 · 已存入沉思素"); }).catch(() => {});
+        }
+        return;
+      }
+      log.innerHTML = '<div class="hint">这次聊完了。点光球重新开始。</div>';
+      setStatus("已结束");
+      if (appMode !== "round" && convo.filter((m) => m.role === "s").length >= 1) reviewMemory(convo, memCtx);
+    });
+
+    // ---- 长期记忆确认卡：抽取本次新事实，亮给用户删/改/确认，点保存才落盘 ----
+    function reviewMemory(convo, ctx) {
+      const card = document.createElement("div");
+      card.className = "mem-card";
+      card.innerHTML = `<div class="mem-title">⏳ 正在回想这次聊了啥…</div>`;
+      log.appendChild(card);
+      log.scrollTop = log.scrollHeight;
+      fetch("/api/dialogue/memory/extract", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ history: convo, kbDir: ctx.kbDir, free: ctx.free, partner: ctx.partner, topic: ctx.topic })
+      }).then((r) => r.json()).then((d) => {
+        if (!d.ok || (!(d.userFacts || []).length && !(d.businessFacts || []).length)) { card.remove(); return; }
+        renderMemCard(card, d.userFacts || [], d.businessFacts || [], ctx);
+      }).catch(() => card.remove());
+    }
+    function renderMemCard(card, userFacts, bizFacts, ctx) {
+      const row = (t) => `<div class="mem-item"><span class="mem-x" title="删除">✕</span><span class="mem-t" contenteditable="true">${escapeHtml(t)}</span></div>`;
+      const sec = (label, arr) => arr.length ? `<div class="mem-sec">${label}</div>${arr.map(row).join("")}` : "";
+      card.innerHTML = `<div class="mem-title">📌 这次我记住了这些（可改可删）</div>`
+        + `<div class="mem-list" data-kind="user">${sec("关于你", userFacts)}</div>`
+        + `<div class="mem-list" data-kind="biz">${sec("关于业务", bizFacts)}</div>`
+        + `<div class="mem-actions"><button class="ln-btn" data-act="save">保存到记忆</button><button class="ln-btn" data-act="drop">这次不记</button></div>`;
+      card.querySelectorAll(".mem-x").forEach((x) => x.addEventListener("click", () => x.closest(".mem-item").remove()));
+      const collect = (kind) => [...card.querySelectorAll(`.mem-list[data-kind="${kind}"] .mem-t`)].map((s) => s.textContent.trim()).filter(Boolean);
+      card.querySelector('[data-act="drop"]').addEventListener("click", () => card.remove());
+      card.querySelector('[data-act="save"]').addEventListener("click", () => {
+        const userKeep = collect("user"), bizKeep = collect("biz");
+        card.innerHTML = `<div class="mem-title">✅ 已记住（关于你 ${userKeep.length} · 关于业务 ${bizKeep.length}）</div>`;
+        fetch("/api/dialogue/memory/save", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ kbDir: ctx.kbDir, free: ctx.free, partner: ctx.partner, userFacts: userKeep, businessFacts: bizKeep })
+        }).catch(() => {});
+      });
+    }
+
+    // ================= 聆听（纯输入·提炼最重要三条） =================
+    let listenOn = false, listenRec = null, listenSegTimer = null;
+    let listenTranscript = "", listenTop3 = [], listenOther = [];
+    let listenDigesting = false, lastDigestLen = 0, lastDigestAt = 0, listenSeq = 0;
+    const SEG_MS = 12000;        // 每段录音时长，分段独立转写、拼接
+    const DIGEST_MIN_GROW = 30;  // 新增字数达到才重新提炼
+    const DIGEST_MIN_GAP = 6000; // 两次提炼最小间隔(ms)
+
+    const lnTop3El = document.getElementById("lnTop3");
+    const lnOtherWrap = document.getElementById("lnOtherWrap");
+    const lnOtherEl = document.getElementById("lnOther");
+    const lnTailEl = document.getElementById("lnTail");
+    const lnSub = document.getElementById("lnSub");
+    const lnPulse = document.getElementById("lnPulse");
+
+    function renderListen() {
+      lnTop3El.innerHTML = "";
+      // Always render 3 numbered slots so the layout holds; empty ones are faint placeholders.
+      for (let i = 0; i < 3; i++) {
+        const it = listenTop3[i];
+        const d = document.createElement("div");
+        d.className = "keycard" + (it ? "" : " empty");
+        if (it) {
+          const s = Math.max(1, Math.min(5, it.stars || 3));
+          const stars = "★".repeat(s) + `<span class="off">${"★".repeat(5 - s)}</span>`;
+          d.innerHTML = `<div class="n">${i + 1}</div><div class="kc-body"><div class="kc-stars" title="重要度 ${s}/5">${stars}</div><div class="kc-text">${escapeHtml(it.text)}</div></div>`;
+        } else {
+          d.innerHTML = `<div class="n">${i + 1}</div><div class="kc-text">${listenOn ? "在听…会自动浮上来" : "待提炼"}</div>`;
+        }
+        lnTop3El.appendChild(d);
+      }
+      // 标题「此刻最重要的三条」只在真有内容时出现，空着时不显示
+      document.querySelector(".ln-head").style.display = listenTop3.length ? "flex" : "none";
+      document.getElementById("lnActions").style.display = (listenOn || listenTop3.length || listenTranscript) ? "flex" : "none";
+      if (listenOther.length) {
+        lnOtherWrap.style.display = "";
+        document.getElementById("lnOtherSummary").textContent = `其他信息（${listenOther.length}）`;
+        lnOtherEl.innerHTML = listenOther.map((t) => `<li>${escapeHtml(t)}</li>`).join("");
+      } else {
+        lnOtherWrap.style.display = "none";
+      }
+    }
+
+    async function digestNow() {
+      if (listenDigesting || listenTranscript.length < 12) return;
+      listenDigesting = true;
+      const mySeq = listenSeq;
+      const snapLen = listenTranscript.length;
+      try {
+        const r = await fetch("/api/listen/digest", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ transcript: listenTranscript, prev: { top3: listenTop3, other: listenOther } })
+        });
+        const d = await r.json().catch(() => ({}));
+        if (mySeq !== listenSeq) return;           // a stop/restart happened
+        // Only adopt a digest that actually produced points — an empty/failed result must
+        // NOT wipe the three we already have (that was the "突然没信息了" bug).
+        if (r.ok && Array.isArray(d.top3) && d.top3.length) {
+          // highest importance on top, so the star hierarchy reads top-down
+          listenTop3 = d.top3.slice().sort((a, b) => (b.stars || 0) - (a.stars || 0));
+          listenOther = Array.isArray(d.other) ? d.other : [];
+          renderListen();
+          if (listenOn) lnSub.textContent = `聆听中 · 已记录约 ${listenTranscript.length} 字`;
+        }
+        // advance the throttle regardless, so we don't hammer the endpoint
+        lastDigestLen = snapLen; lastDigestAt = performance.now();
+      } catch (e) { /* keep last digest */ }
+      finally { listenDigesting = false; }
+    }
+    function maybeDigest() {
+      if (listenDigesting) return;
+      const grew = listenTranscript.length - lastDigestLen;
+      const elapsed = performance.now() - lastDigestAt;
+      if (grew >= DIGEST_MIN_GROW && (elapsed > DIGEST_MIN_GAP || lastDigestAt === 0)) digestNow();
+    }
+
+    async function processSeg(blob) {
+      if (!blob || !blob.size) return;
+      try {
+        const r = await fetch("/api/dialogue/listen", {
+          method: "POST", headers: { "content-type": blob.type || "audio/webm" }, body: blob
+        });
+        const d = await r.json().catch(() => ({}));
+        const t = (d.text || "").trim();
+        if (t) {
+          listenTranscript += (listenTranscript ? " " : "") + t;
+          lnTailEl.textContent = "…" + listenTranscript.slice(-120);
+          maybeDigest();
+        }
+      } catch (e) { /* drop this segment */ }
+    }
+
+    function recordSeg() {
+      if (!listenOn || !stream) return;
+      const mime = pickMime();
+      const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+      const chunks = [];
+      rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+      rec.onstop = () => {
+        const blob = new Blob(chunks, { type: rec.mimeType || "audio/webm" });
+        if (listenOn) recordSeg();    // start next segment immediately (minimal gap)
+        processSeg(blob);             // transcribe the finished one in parallel
+      };
+      listenRec = rec;
+      rec.start();
+      listenSegTimer = setTimeout(() => { if (rec.state === "recording") rec.stop(); }, SEG_MS);
+    }
+
+    async function startListenMode() {
+      const micOk = await ensureMic();
+      if (!micOk) { lnSub.textContent = "没拿到麦克风——刷新页面、在弹窗点「允许」（端口 8770 需重新授权）。"; return; }
+      listenOn = true; listenSeq++;
+      listenTranscript = ""; listenTop3 = []; listenOther = [];
+      lastDigestLen = 0; lastDigestAt = 0; listenDigesting = false;
+      renderListen();
+      lnPulse.style.visibility = "visible";
+      lnTailEl.style.display = ""; lnTailEl.textContent = "…";
+      lnSub.textContent = "聆听中 · 正在听…";
+      orb.textContent = "停止聆听"; orb.classList.add("speaking");
+      setStatus("聆听中（你不用说话）", true);
+      recordSeg();
+    }
+    function stopListenMode() {
+      listenOn = false; listenSeq++;
+      if (listenSegTimer) { clearTimeout(listenSegTimer); listenSegTimer = null; }
+      if (listenRec && listenRec.state === "recording") { try { listenRec.stop(); } catch {} }
+      lnPulse.style.visibility = "hidden";
+      orb.textContent = "开始聆听"; orb.classList.remove("speaking");
+      setStatus("聆听已停止");
+      lnSub.textContent = `已停止 · 共记录约 ${listenTranscript.length} 字`;
+      if (listenTranscript.length >= 12) { listenSeq++; setTimeout(digestNow, 50); } // final pass
+    }
+
+    document.getElementById("lnCopy").addEventListener("click", () => {
+      const txt = listenTop3.length ? listenTop3.map((t, i) => `${i + 1}. ${"★".repeat(t.stars || 3)} ${t.text}`).join("\n") : "（还没有提炼出三条）";
+      navigator.clipboard?.writeText(txt).then(() => { lnSub.textContent = "已复制三条到剪贴板"; }).catch(() => {});
+    });
+    document.getElementById("lnExport").addEventListener("click", () => {
+      const lines = [];
+      lines.push("# 聆听纪要", "", "## 最重要的三条");
+      listenTop3.forEach((t, i) => lines.push(`${i + 1}. ${"★".repeat(t.stars || 3)} ${t.text}`));
+      if (listenOther.length) { lines.push("", "## 其他信息"); listenOther.forEach((t) => lines.push(`- ${t}`)); }
+      lines.push("", "## 完整转写", "", listenTranscript || "（空）");
+      const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = `聆听纪要-${Date.now()}.md`;
+      a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+
+    // ================= 双人播客 =================
+    // 爽姐(主持) + 老根(嘉宾) 就当前知识库录一期播客：片头报幕 → 你来我往 → 15 分钟自然收尾。
+    // 片头/片尾有音乐；你可以打字插话，下一位会接你的话。
+    // 这些由页面上的「节目配置」决定，开播时读取
+    let SHOW_NAME = "《掰扯》";
+    let POD_MS = 15 * 60 * 1000;
+    let CAST = [
+      { name: "爽姐", voice: "zh_female_shuangkuaisisi_uranus_bigtts", role: "host",  stance: "会带节奏、有精神的主持人", side: "me" },
+      { name: "老根", voice: "zh_male_yuanboxiaoshu_uranus_bigtts",   role: "guest", stance: "沉稳、有阅历、爱举活生生例子的嘉宾", side: "ai" }
+    ];
+    function buildPodcastConfig() {
+      // 主持/嘉宾/节目名用默认（爽姐 × 老根 ·《掰扯》）；只有时长在页面上选
+      const min = +podDurSel.value;
+      POD_MS = min > 0 ? min * 60 * 1000 : Infinity;
+    }
+    let duoOn = false, duoSeq = 0, duoTranscript = [], duoStart = 0;
+    const mmss = (ms) => { const s = Math.max(0, Math.floor(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
+
+    // ---- procedural intro/outro jingles (Web Audio, no files) ----
+    let podActx = null, podMaster = null;
+    function ensurePodAudio() {
+      if (!podActx) {
+        podActx = new (window.AudioContext || window.webkitAudioContext)();
+        podMaster = podActx.createGain(); podMaster.gain.value = 0.5;
+        const lp = podActx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 3600;
+        podMaster.connect(lp); lp.connect(podActx.destination);
+      }
+      if (podActx.state === "suspended") podActx.resume();
+    }
+    function jNote(freq, t0, dur, gain, type) {
+      const o = podActx.createOscillator(), g = podActx.createGain();
+      o.type = type || "triangle"; o.frequency.value = freq;
+      o.connect(g); g.connect(podMaster);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(gain, t0 + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.start(t0); o.stop(t0 + dur + 0.05);
+    }
+    function playJingle(kind) {
+      return new Promise((resolve) => {
+        ensurePodAudio();
+        const t = podActx.currentTime + 0.06;
+        if (kind === "intro") {
+          [[523.25, 0], [659.25, 0.13], [783.99, 0.26], [1046.5, 0.40]].forEach(([f, dt]) => jNote(f, t + dt, 0.7, 0.22, "triangle"));
+          jNote(130.81, t, 1.3, 0.14, "sine"); jNote(196.0, t + 0.4, 0.9, 0.10, "sine");
+          setTimeout(resolve, 1450);
+        } else {
+          [[783.99, 0], [659.25, 0.16], [523.25, 0.32]].forEach(([f, dt]) => jNote(f, t + dt, 1.0, 0.20, "triangle"));
+          jNote(130.81, t + 0.32, 1.6, 0.14, "sine"); jNote(261.63, t + 0.32, 1.6, 0.10, "sine");
+          setTimeout(resolve, 1800);
+        }
+      });
+    }
+
+    function addDuoMsg(name, side) {
+      const el = document.createElement("div");
+      el.className = "msg " + (side === "me" ? "me" : "ai");
+      el.innerHTML = `<div class="who">${escapeHtml(name)}</div>`;
+      log.appendChild(el); log.scrollTop = log.scrollHeight;
+      return el;
+    }
+
+    // PREPARE a turn: generate its text + start synthesizing every sentence — but DON'T play.
+    // This lets the NEXT speaker's turn be fully cooked while the CURRENT one is still talking.
+    // beat arc — 给每段一个"节奏"，让整期有抑扬顿挫，而不是平铺直叙
+    // 节拍弧线：一期播客像一条曲线——开头立画面、中段起张力、临近收尾往大里收。
+    // 按"已播进度"切换可选节拍池；不限时长时走通用循环。
+    const ARC = {
+      host: { early: ["追问", "转场", "追问"], mid: ["碰撞", "追问", "碰撞"], late: ["升华", "停顿", "升华"] },
+      guest: { early: ["破题", "举例", "举例"], mid: ["碰撞", "举例", "碰撞"], late: ["升华", "停顿", "升华"] },
+    };
+    const FLOW = { host: ["追问", "碰撞", "转场", "停顿", "升华"], guest: ["破题", "举例", "碰撞", "升华", "停顿"] };
+    let gBeat = 0, hBeat = 0;
+    function arcSeg() {
+      if (POD_MS === Infinity) return null;          // 不限时长：无弧线
+      const p = (Date.now() - duoStart) / POD_MS;
+      return p < 0.33 ? "early" : p < 0.7 ? "mid" : "late";
+    }
+    function nextBeat(sp) {
+      const isHost = sp.role === "host";
+      const i = isHost ? hBeat++ : gBeat++;
+      const seg = arcSeg();
+      const pool = seg ? ARC[isHost ? "host" : "guest"][seg] : FLOW[isHost ? "host" : "guest"];
+      return pool[i % pool.length];
+    }
+
+    async function prepareTurn(sp, ot, mySeq, phase, beat) {
+      let text = "";
+      const sentences = []; // { text, urlP }
+      try {
+        const resp = await fetch("/api/dialogue/duo", {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ topic: currentTopic(), kbDir: currentKbDir(), speaker: sp.name, other: ot.name, stance: sp.stance, transcript: duoTranscript.slice(), role: sp.role, phase, showName: SHOW_NAME, beat: beat || "" })
+        });
+        if (!resp.ok || !resp.body) throw new Error("duo " + resp.status);
+        const reader = resp.body.getReader(); const dec = new TextDecoder(); let buf = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (mySeq !== duoSeq) { reader.cancel(); return null; }
+          buf += dec.decode(value, { stream: true });
+          let idx;
+          while ((idx = buf.indexOf("\n\n")) >= 0) {
+            const ev = buf.slice(0, idx); buf = buf.slice(idx + 2);
+            const line = ev.split("\n").find((l) => l.startsWith("data:")); if (!line) continue;
+            let j; try { j = JSON.parse(line.slice(5).trim()); } catch { continue; }
+            if (j.sentence) { text += j.sentence; sentences.push({ text: j.sentence, urlP: fetchTTS(j.sentence, sp.voice) }); } // 配音此刻就开始预取
+          }
+        }
+      } catch (e) {
+        if (mySeq === duoSeq) setStatus("出错：" + e.message);
+        return null;
+      }
+      if (!text.trim()) return null;
+      return { sp, phase, text: text.trim(), sentences };
+    }
+
+    // PLAY an already-prepared turn: reveal text per sentence, play its (pre-fetched) clips in order.
+    async function playTurn(prep, mySeq) {
+      if (!prep || mySeq !== duoSeq) return;
+      const sp = prep.sp;
+      const tag = prep.phase === "intro" ? "片头" : prep.phase === "closing" ? "收尾" : mmss(Date.now() - duoStart);
+      setStatus(`${SHOW_NAME} · ${tag} · ${sp.name} 在说…`, true);
+      const bubble = addDuoMsg(sp.name, sp.side);
+      bubble.classList.add("speaking");
+      let shown = "";
+      for (const s of prep.sentences) {
+        if (mySeq !== duoSeq) break;
+        const url = await s.urlP.catch(() => null);
+        if (mySeq !== duoSeq) break;
+        shown += s.text;
+        bubble.innerHTML = `<div class="who">${escapeHtml(sp.name)}</div>${escapeHtml(shown)}`;
+        log.scrollTop = log.scrollHeight;
+        if (url) await playUrl(url);
+      }
+      bubble.classList.remove("speaking");
+    }
+
+    async function runDuoLoop(mySeq) {
+      duoStart = Date.now(); gBeat = 0; hBeat = 0;
+      // 片头：主持人报幕
+      let prep = await prepareTurn(CAST[0], CAST[1], mySeq, "intro");
+      if (!duoOn || mySeq !== duoSeq || !prep) return;
+      duoTranscript.push({ speaker: CAST[0].name, text: prep.text });
+      let bi = 1, ended = false;
+      // 一边播片头，一边就把第一段正片（嘉宾）备好
+      let nextPrep = prepareTurn(CAST[1], CAST[0], mySeq, "body", nextBeat(CAST[1]));
+      await playTurn(prep, mySeq);
+      while (duoOn && mySeq === duoSeq) {
+        if (POD_MS !== Infinity && Date.now() - duoStart >= POD_MS) {
+          const c = await prepareTurn(CAST[0], CAST[1], mySeq, "closing"); // 主持人收尾
+          if (!duoOn || mySeq !== duoSeq || !c) return;
+          duoTranscript.push({ speaker: CAST[0].name, text: c.text });
+          await playTurn(c, mySeq);
+          ended = true; break;
+        }
+        const cur = await nextPrep;                 // 这一段早就在 A 说话时备好了
+        if (!duoOn || mySeq !== duoSeq) return;
+        if (!cur) return;                           // 准备失败就收
+        duoTranscript.push({ speaker: cur.sp.name, text: cur.text });
+        bi++;
+        const nsp = CAST[bi % 2], not = CAST[(bi + 1) % 2];
+        nextPrep = prepareTurn(nsp, not, mySeq, "body", nextBeat(nsp)); // 在播 cur 的同时，备下一段
+        await playTurn(cur, mySeq);
+      }
+      if (ended && duoOn && mySeq === duoSeq) {
+        setStatus(`${SHOW_NAME} · 本期完`, true);
+        await playJingle("outro");
+        exitDuo();
+      }
+    }
+
+    function duoInterject(text) {
+      duoTranscript.push({ speaker: "听众", text });
+      const el = document.createElement("div");
+      el.className = "msg me"; el.style.alignSelf = "center"; el.style.opacity = ".9";
+      el.innerHTML = `<div class="who">听众（你）</div>${escapeHtml(text)}`;
+      log.appendChild(el); log.scrollTop = log.scrollHeight;
+      setStatus("已插话，下一位会接你的话…", true);
+    }
+
+    function enterDuo() {
+      buildPodcastConfig();   // 读取页面上的主持/嘉宾/时长/节目名
+      duoOn = true; duoSeq++; const mySeq = duoSeq;
+      duoTranscript = [];
+      if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; }
+      turnSeq++; stopListening && stopListening();
+      log.innerHTML = "";
+      orb.textContent = "停止"; orb.classList.add("thinking");
+      textRow.style.display = "flex";
+      ensurePodAudio();
+      startEpisode();
+      setStatus(`${SHOW_NAME} 即将开始…`, true);
+      (async () => {
+        await playJingle("intro");           // 片头音乐
+        if (duoOn && mySeq === duoSeq) runDuoLoop(mySeq);
+      })();
+    }
+    function exitDuo() {
+      duoOn = false; duoSeq++;
+      if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; }
+      orb.classList.remove("thinking"); orb.textContent = "开播";
+    }
+
+    // ---- audio-reactive orb: jade halo when listening (real mic), brass when it speaks ----
+    // Soft pastel atmospheric orbs (ElevenLabs signature) drifting + reacting to audio.
+    (function orbViz() {
+      const canvas = document.getElementById("orbCanvas");
+      if (!canvas || !canvas.getContext) return;
+      const cx2d = canvas.getContext("2d");
+      const SIZE = 320;   // 画布放大留余量；光晕半径不变（见下），只是不再触到方形边界
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = SIZE * dpr; canvas.height = SIZE * dpr;
+      canvas.style.width = SIZE + "px"; canvas.style.height = SIZE + "px";
+      cx2d.scale(dpr, dpr);
+      const c = SIZE / 2;
+      let buf = null, t = 0, smooth = 0;
+      // five gradient stops; speaking warms (peach/rose/lavender), listening cools (mint/sky)
+      // 地球淡蓝主调：海蓝 + 天蓝 + 大气层青白；listening 时稍亮一点点做区分
+      const WARM = [[96,164,224], [140,198,238], [186,224,242]];    // 待机/说话：海蓝、天蓝、淡青白
+      const COOL = [[110,182,236], [156,212,244], [200,232,246]];   // 听你说：稍亮的蓝
+
+      function rawAmp() {
+        if (mode === "listening" && analyser) {
+          if (!buf || buf.length !== analyser.fftSize) buf = new Uint8Array(analyser.fftSize);
+          analyser.getByteTimeDomainData(buf);
+          let s = 0; for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; s += v * v; }
+          return Math.min(1, Math.sqrt(s / buf.length) * 6.5);
+        }
+        if (mode === "speaking") return 0.36 + 0.30 * (0.5 + 0.5 * Math.sin(t * 0.16)) + 0.16 * Math.sin(t * 0.5) + 0.06 * Math.sin(t * 1.3);
+        if (mode === "thinking") return 0.18 + 0.08 * Math.sin(t * 0.1);
+        return 0.10 + 0.05 * Math.sin(t * 0.04); // idle breathing
+      }
+
+      function bloom(cxp, cyp, rad, rgb, a) {
+        const g = cx2d.createRadialGradient(cxp, cyp, 0, cxp, cyp, rad);
+        g.addColorStop(0, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`);
+        g.addColorStop(1, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0)`);
+        cx2d.fillStyle = g; cx2d.beginPath(); cx2d.arc(cxp, cyp, rad, 0, Math.PI * 2); cx2d.fill();
+      }
+
+      function frame() {
+        t += 1;
+        smooth += (Math.max(0, Math.min(1, rawAmp())) - smooth) * 0.16;
+        const stops = (mode === "listening") ? COOL : WARM;
+        cx2d.clearRect(0, 0, SIZE, SIZE);
+        cx2d.globalCompositeOperation = "source-over";
+        const spread = 14 + smooth * 20;          // orbs drift apart as amplitude rises
+        const rad = 64 + smooth * 26;
+        const alpha = 0.42 + smooth * 0.34;
+        for (let i = 0; i < stops.length; i++) {
+          const ang = t * 0.012 + (i * Math.PI * 2) / stops.length;
+          const ox = c + Math.cos(ang) * spread;
+          const oy = c + Math.sin(ang) * spread;
+          bloom(ox, oy, rad, stops[i], alpha);
+        }
+        // crisp thin ring to give the orb an edge on the light canvas
+        cx2d.beginPath(); cx2d.arc(c, c, 60 + smooth * 8, 0, Math.PI * 2);
+        cx2d.strokeStyle = "rgba(245,244,241,0.16)"; cx2d.lineWidth = 1; cx2d.stroke();
+        requestAnimationFrame(frame);
+      }
+      frame();
+    })();
+  </script>
+</body>
+</html>
