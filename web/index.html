@@ -387,12 +387,16 @@
     #digTracker .dt-title { font-size: 12.5px; color: var(--ink); font-weight: 600; }
     #digTracker .dt-phase { font-size: 11px; padding: 1px 8px; border-radius: 9999px; background: var(--surface-strong); color: var(--muted); }
     #digTracker .dt-phase.press { background: rgba(244,197,168,0.18); color: var(--g-peach); }
-    .dt-item { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; line-height: 1.45; padding: 6px 0; border-top: 1px solid var(--hairline); color: var(--body); }
+    #digTracker .dt-legend { font-size: 10.5px; color: var(--muted-soft); margin-bottom: 9px; letter-spacing: .2px; }
+    .dt-item { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; line-height: 1.45; padding: 8px 0; border-top: 1px solid var(--hairline); color: var(--body); }
     .dt-item:first-of-type { border-top: none; }
-    .dt-mark { width: 14px; flex-shrink: 0; text-align: center; color: var(--muted); }
+    .dt-mark { width: 14px; flex-shrink: 0; text-align: center; color: var(--muted); padding-top: 1px; }
+    .dt-body { flex: 1; min-width: 0; }
+    .dt-focus { font-weight: 600; color: var(--ink); }
+    .dt-q { font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
     .dt-item.closed .dt-mark { color: var(--g-mint); }
-    .dt-item.closed .dt-text { color: var(--muted-soft); text-decoration: line-through; }
-    .dt-item.fresh .dt-mark, .dt-item.fresh .dt-text { color: var(--g-peach); }
+    .dt-item.closed .dt-focus { color: var(--muted-soft); text-decoration: line-through; font-weight: 400; }
+    .dt-item.fresh .dt-mark, .dt-item.fresh .dt-focus { color: var(--g-peach); }
     .dt-btn { display: block; width: 100%; margin-top: 12px; font: inherit; font-size: 12.5px; padding: 9px; border-radius: 9px; border: 1px solid var(--primary); background: var(--primary); color: var(--on-primary); cursor: pointer; font-weight: 500; }
     .dt-btn:hover:not([disabled]) { background: var(--primary-active); }
     /* 一页纸 */
@@ -647,7 +651,7 @@
       if (appMode !== "dig" || !digCtx.ready) return undefined;
       return {
         boss: digCtx.boss, materialTitle: digCtx.materialTitle, materialText: digCtx.materialText,
-        kbDir: digCtx.kbDir, brain: digCtx.brain, phase: digPhase(),
+        kbDir: digCtx.kbDir, brain: digCtx.brain, ask: digCtx.ask, phase: digPhase(),
         checklist: digCtx.checklist.map((c) => ({ id: c.id, focus: c.focus, question: c.question, status: c.status }))
       };
     }
@@ -1852,13 +1856,19 @@
       digSummaryEl.classList.remove("show");
       digPanel.innerHTML = `
         <div class="dig-card">
-          <div class="dig-loaded"><span>⚠️</span><span>此流程已加载 <b>${LOADED_SKILL.name}</b> ${LOADED_SKILL.version}</span></div>
           <h3>抠材料 · 代你过一份汇报</h3>
           <div class="dig-sub">填下属是谁、这次抠哪份材料。读完材料、按你的标准备好问题，再开台。标准库：${escapeHtml(digKbLabel() || "未挂")}</div>
           <div class="dig-grid">
             <div class="dig-field">
               <label>对谈对象（下属称呼）</label>
               <input id="digPartner" type="text" maxlength="12" placeholder="填下属称呼" />
+            </div>
+            <div class="dig-field">
+              <label>问询风格</label>
+              <select id="digAsk">
+                <option value="">s-vet（默认 · 按材料类型抠）</option>
+                <option value="consult">顾问式追问（金字塔 · 先打命门）</option>
+              </select>
             </div>
             <div class="dig-field">
               <label>重点关注</label>
@@ -1869,8 +1879,8 @@
                 <option value="预算预测">预算预测</option>
               </select>
             </div>
-            <div class="dig-field span2">
-              <label>行业大脑（挂接该行业的顶级认知）</label>
+            <div class="dig-field">
+              <label>行业大脑（挂接行业认知）</label>
               <select id="digBrain">
                 <option value="">通用（默认）</option>
                 <option value="整装·v0.1">整装 · 战略命题版 v0.1</option>
@@ -1908,7 +1918,7 @@
       partnerNameInput.value = partner;
       // 看着像链接/路径就当 material，否则当正文
       const looksPath = /^(obsidian:\/\/|file:\/\/|\/|~\/)/.test(raw) || (raw.length < 260 && !/\s/.test(raw) && /\.(md|markdown|txt)$/i.test(raw));
-      const payload = { boss: meLabel(), partner, kbDir: digKbDir(), lens: (document.getElementById("digLens") || {}).value || "", brain: (document.getElementById("digBrain") || {}).value || "" };
+      const payload = { boss: meLabel(), partner, kbDir: digKbDir(), lens: (document.getElementById("digLens") || {}).value || "", brain: (document.getElementById("digBrain") || {}).value || "", ask: (document.getElementById("digAsk") || {}).value || "" };
       if (looksPath) payload.material = raw; else { payload.materialText = raw; payload.materialTitle = raw.slice(0, 18); }
       btn.disabled = true; hint.className = "dig-hint";
       const steps = ["读材料…", "判断材料类型…", "按你的标准找缺口…", "备问题…"];
@@ -1922,7 +1932,7 @@
         digCtx = {
           ready: false, boss: meLabel(), partner,
           materialTitle: d.materialTitle || "这份材料", materialText: d.materialText || "",
-          kbDir: digKbDir(), brain: payload.brain,
+          kbDir: digKbDir(), brain: payload.brain, ask: payload.ask,
           checklist: (d.checklist || []).map((c) => ({ ...c, status: "open" }))
         };
         renderDigChecklist(d);
@@ -2001,20 +2011,22 @@
     // 实时清单（右上角）
     function renderDigTracker() {
       const phase = digPhase();
-      const items = digCtx.checklist.map((c) => `
-        <div class="dt-item ${c.status === "closed" ? "closed" : ""} ${c.fresh ? "fresh" : ""}">
-          <span class="dt-mark">${c.status === "closed" ? "✓" : (c.fresh ? "!" : "○")}</span>
-          <span class="dt-text">${escapeHtml(c.focus || c.question || "")}</span>
-        </div>`).join("");
+      const items = digCtx.checklist.map((c) => {
+        const mark = c.status === "closed" ? "✓" : (c.fresh ? "!" : "○");
+        const q = (c.status !== "closed" && c.question) ? `<div class="dt-q">${escapeHtml(c.question)}</div>` : "";
+        return `<div class="dt-item ${c.status === "closed" ? "closed" : ""} ${c.fresh ? "fresh" : ""}">
+          <span class="dt-mark">${mark}</span>
+          <div class="dt-body"><div class="dt-focus">${escapeHtml(c.focus || c.question || "")}</div>${q}</div>
+        </div>`;
+      }).join("");
       const closedN = digCtx.checklist.filter((c) => c.status === "closed").length;
       digTracker.innerHTML = `
         <div class="dt-head">
           <span class="dt-title">质询清单 ${closedN}/${digCtx.checklist.length}</span>
           <span class="dt-phase ${phase === "press" ? "press" : ""}">${phase === "press" ? "收紧" : "放松"}</span>
         </div>
-        ${items}
-        <button class="dt-btn" id="digFinishBtn">收尾 · 出一页纸</button>`;
-      document.getElementById("digFinishBtn").addEventListener("click", digFinish);
+        <div class="dt-legend">✓ 已问清　○ 待质询　! 新发现</div>
+        ${items}`;
     }
 
     // 下属答完一句 → 判定哪条 closed、有无新缺口（非阻塞，更新面板）
@@ -2093,6 +2105,12 @@
       const convo = history.filter((m) => m && m.text);
       const wasShen = soulMode();
       const memCtx = { kbDir: currentKbDir(), free: currentFree(), partner: partnerName(), topic: currentTopic() };
+      // 抠材料：结束即把整场记录+总结静默存进 Obsidian（快照在清空 history 前取）
+      const wasDig = (appMode === "dig" && digCtx.ready);
+      const digSnap = wasDig ? {
+        boss: digCtx.boss, partner: digCtx.partner, materialTitle: digCtx.materialTitle,
+        checklist: digCtx.checklist.map((c) => ({ focus: c.focus, status: c.status })), history: convo
+      } : null;
       history = [];
       setMode("idle");
       interruptBtn.disabled = true;
@@ -2105,6 +2123,28 @@
         if (convo.filter((m) => m.role === "s").length >= 1) {
           fetch("/api/shen/save", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ transcript: convo }) })
             .then((r) => r.json()).then((d) => { if (d && d.ok) setStatus("已收 · 已存入沉思素"); }).catch(() => {});
+        }
+        return;
+      }
+      if (wasDig) {
+        // 抠材料：静默存档（生成总结 + 写整场记录 .md 到 Obsidian），不弹窗
+        digTracker.classList.remove("show");
+        log.innerHTML = '<div class="hint">这次抠完了，正在把整场记录存进 Obsidian…</div>';
+        setStatus("在存档到 Obsidian…");
+        if (convo.length) {
+          fetch("/api/dialogue/dig/summary", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(digSnap) })
+            .then((r) => r.json()).then((d) => {
+              if (d && d.ok && d.savedFile) {
+                setStatus("已结束 · 已存入 Obsidian");
+                log.innerHTML = `<div class="hint">这次抠完了，整场记录已存入 Obsidian：<b>${escapeHtml(d.savedFile)}</b>。点光球重新开始。</div>`;
+              } else {
+                setStatus("已结束（存档失败）");
+                log.innerHTML = `<div class="hint">这次抠完了，但存档没成功：${escapeHtml((d && (d.saveError || d.error)) || "未知错误")}。点光球重新开始。</div>`;
+              }
+            }).catch((e) => { setStatus("已结束（存档失败）"); log.innerHTML = `<div class="hint">这次抠完了，存档请求出错：${escapeHtml((e && e.message) || e)}。点光球重新开始。</div>`; });
+        } else {
+          log.innerHTML = '<div class="hint">这次没产生对话，未存档。点光球重新开始。</div>';
+          setStatus("已结束");
         }
         return;
       }
