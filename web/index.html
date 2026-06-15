@@ -995,6 +995,7 @@
       const ttsPromises = [];   // ordered TTS fetches, started as sentences arrive
       let streamDone = false;
       let consumerStarted = false;
+      let fillerUsed = false;   // 本轮垫词总额度=1：开场垫词与句间过渡音合用，垫过一次就不再垫
 
       function beginSpeak() {
         if (consumerStarted) return;
@@ -1007,23 +1008,21 @@
       async function consume() {
         if (consumerStarted) return;
         beginSpeak();
-        let i = 0, bridges = 0;
-        const MAX_BRIDGES = 3;
+        let i = 0;
         while (true) {
           if (myTurn !== turnSeq) return;                 // interrupted / reset
           if (i >= ttsPromises.length) {
             if (streamDone) break;
-            // 还没下一段音频——用过渡音填空档（已放过开场垫话后才填，最多几次），避免死寂
-            if (i > 0 && bridges < MAX_BRIDGES && !textOnly && !soulMode()) {
+            // 还没下一段音频——只在本轮还没垫过时补一次过渡音，垫完就拉闸（全场一次）
+            if (i > 0 && !fillerUsed && !textOnly && !soulMode()) {
               const burl = pickBridgeUrl();
-              if (burl) { bridges++; await playUrl(burl); continue; }
+              if (burl) { fillerUsed = true; await playUrl(burl); continue; }
             }
             await sleep(40);
             continue;
           }
           const url = await ttsPromises[i++].catch(() => null);
           if (myTurn !== turnSeq) return;
-          bridges = 0;                                     // 真音频到了，重置过渡音预算
           if (url) await playUrl(url);
         }
         finishTurn();
@@ -1099,7 +1098,8 @@
             let j; try { j = JSON.parse(line.slice(5).trim()); } catch { continue; }
             if (j.filler) {
               // instant "嗯…" feedback — played first, not shown as text, not in history
-              if (myTurn === turnSeq && !silent) { ttsPromises.push(fetchTTS(j.filler)); consume(); }
+              // 本轮只垫一次：开场垫词占掉额度后，句间过渡音不再补
+              if (myTurn === turnSeq && !silent && !fillerUsed) { fillerUsed = true; ttsPromises.push(fetchTTS(j.filler)); consume(); }
             } else if (j.sentence) onSentence(j.sentence);
             else if (j.error) setStatus("出错：" + j.error);
           }
@@ -1361,8 +1361,9 @@
           if (specFired) { specInvalid = true; specText = ""; cancelGenSpeculation(); }   // resumed → discard spec recog + gen + stale text
           speechSeen = true; voicedMs += dt; silenceStart = 0;
         }
-        else if (speechSeen && voicedMs > 350) {
-          // only end after we've heard real speech (≥350ms voiced) AND a long enough pause
+        else if (speechSeen && voicedMs > 150) {
+          // only end after we've heard real speech (≥150ms voiced) AND a long enough pause
+          // 150ms：短答"是的/对/嗯"也能触发结束；噪音已被音量阈值挡在 speechSeen 之外
           if (!silenceStart) {
             silenceStart = now;
             // 流式+抢跑：一停顿就用实时转写提前起跑（这才有真提前量——文字早就在了，不必等批量）
