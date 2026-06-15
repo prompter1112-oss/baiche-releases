@@ -339,23 +339,31 @@
     .mem-t:focus { background: var(--surface-strong); box-shadow: inset 0 0 0 1px var(--hairline-strong); }
     .mem-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
     /* ===== 抠材料（对齐深色主题）===== */
-    #digPanel { display: none; width: 100%; max-width: 760px; align-self: center; box-sizing: border-box; padding: 0 24px; }
-    /* 清单/分析结果可能很长 → 自己在剩余空间内滚动，确保底部「确认」按钮始终够得到 */
-    #digPanel.show { display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding-top: 8px; padding-bottom: 24px; }
-    .dig-card { background: var(--card); border: 1px solid var(--hairline-strong); border-radius: 16px; padding: 22px 24px; box-shadow: var(--shadow); }
-    .dig-card h3 { margin: 0 0 5px; font-size: 17px; font-weight: 500; color: var(--ink); }
-    .dig-card .dig-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
-    .dig-loaded { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #E0A23E; background: rgba(224,162,62,0.10); border: 1px solid rgba(224,162,62,0.32); border-radius: 8px; padding: 6px 11px; margin: 0 0 14px; }
+    /* 抠材料开台/清单：独立居中浮层，卡片内部滚动，不与底部光球抢位 */
+    #digPanel { display: none; }
+    #digPanel.show { display: flex; position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.58);
+      align-items: center; justify-content: center; padding: 22px; box-sizing: border-box; }
+    .dig-card { background: var(--card); border: 1px solid var(--hairline-strong); border-radius: 16px; padding: 20px 22px; box-shadow: var(--shadow);
+      width: 100%; max-width: 560px; max-height: calc(100vh - 44px); overflow-y: auto; box-sizing: border-box; }
+    .dig-card h3 { margin: 0 0 3px; font-size: 16px; font-weight: 500; color: var(--ink); }
+    .dig-card .dig-sub { font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.45; }
+    .dig-loaded { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: #E0A23E; background: rgba(224,162,62,0.10); border: 1px solid rgba(224,162,62,0.32); border-radius: 8px; padding: 5px 10px; margin: 0 0 12px; }
     .dig-loaded b { font-weight: 600; color: #EBB659; }
-    .dig-field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 15px; }
-    .dig-field label { font-size: 12.5px; color: var(--muted); }
-    .dig-field input, .dig-field textarea, .dig-field select { font: inherit; font-size: 14px; padding: 10px 12px; border: 1px solid var(--hairline-strong); border-radius: 10px; background: var(--canvas-soft); color: var(--ink); width: 100%; box-sizing: border-box; }
+    .dig-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 11px; }
+    .dig-field label { font-size: 12px; color: var(--muted); }
+    .dig-field input, .dig-field textarea, .dig-field select { font: inherit; font-size: 13.5px; padding: 8px 11px; border: 1px solid var(--hairline-strong); border-radius: 9px; background: var(--canvas-soft); color: var(--ink); width: 100%; box-sizing: border-box; }
     .dig-field input::placeholder, .dig-field textarea::placeholder { color: var(--muted-soft); }
-    .dig-field input:focus, .dig-field textarea:focus { border-color: var(--ink); outline: none; }
-    .dig-field textarea { min-height: 80px; resize: vertical; line-height: 1.55; }
+    .dig-field input:focus, .dig-field textarea:focus, .dig-field select:focus { border-color: var(--ink); outline: none; }
+    .dig-field textarea { min-height: 96px; resize: vertical; line-height: 1.5; }
+    /* 短字段两列并排，省竖向空间；跨两列用 .span2 */
+    .dig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px 12px; }
+    .dig-grid .dig-field { margin-bottom: 0; }
+    .dig-grid .span2 { grid-column: 1 / -1; }
     .dig-hint { font-size: 12px; color: var(--muted); }
     .dig-hint.ok { color: var(--g-mint); } .dig-hint.err { color: var(--g-peach); }
-    .dig-row { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 10px; }
+    /* 按钮行吸底常驻：长清单也能随时点到「确认/读材料」 */
+    .dig-row { display: flex; gap: 10px; align-items: center; justify-content: flex-end;
+      position: sticky; bottom: -20px; background: var(--card); margin: 14px -22px -20px; padding: 12px 22px; border-top: 1px solid var(--hairline); }
     .dig-btn { font: inherit; font-size: 13.5px; padding: 9px 18px; border-radius: 9999px; border: 1px solid var(--primary); background: var(--primary); color: var(--on-primary); cursor: pointer; font-weight: 500; }
     .dig-btn:hover:not([disabled]) { background: var(--primary-active); }
     .dig-btn.ghost { background: transparent; color: var(--ink); border-color: var(--hairline-strong); font-weight: 400; }
@@ -1846,35 +1854,37 @@
           <div class="dig-loaded"><span>⚠️</span><span>此流程已加载 <b>${LOADED_SKILL.name}</b> ${LOADED_SKILL.version}</span></div>
           <h3>抠材料 · 代你过一份汇报</h3>
           <div class="dig-sub">填下属是谁、这次抠哪份材料。读完材料、按你的标准备好问题，再开台。标准库：${escapeHtml(digKbLabel() || "未挂")}</div>
-          <div class="dig-field">
-            <label>对谈对象（下属称呼）</label>
-            <input id="digPartner" type="text" maxlength="12" placeholder="填下属称呼" />
-          </div>
-          <div class="dig-field">
-            <label>重点关注</label>
-            <select id="digLens">
-              <option value="">自动判断（默认）</option>
-              <option value="战略澄清">战略澄清</option>
-              <option value="业务述职">业务述职</option>
-              <option value="预算预测">预算预测</option>
-            </select>
-          </div>
-          <div class="dig-field">
-            <label>行业大脑（挂接该行业的顶级认知）</label>
-            <select id="digBrain">
-              <option value="">通用（默认）</option>
-              <option value="整装·v0.1">整装 · 战略命题版 v0.1</option>
-              <option value="整装">整装 · 经营诊断版（dia）</option>
-              <option value="链家">链家</option>
-              <option value="新房">新房</option>
-              <option value="惠居">惠居</option>
-              <option value="贝壳城市">贝壳城市</option>
-              <option value="贝好家">贝好家</option>
-            </select>
-          </div>
-          <div class="dig-field">
-            <label>汇报材料（粘 obsidian:// 链接 / 文件绝对路径，或直接贴正文）</label>
-            <textarea id="digMaterial" placeholder="obsidian://open?vault=...&file=...&#10;或 /Users/you/.../Q3绩效方案.md&#10;或直接把材料正文贴在这里"></textarea>
+          <div class="dig-grid">
+            <div class="dig-field">
+              <label>对谈对象（下属称呼）</label>
+              <input id="digPartner" type="text" maxlength="12" placeholder="填下属称呼" />
+            </div>
+            <div class="dig-field">
+              <label>重点关注</label>
+              <select id="digLens">
+                <option value="">自动判断（默认）</option>
+                <option value="战略澄清">战略澄清</option>
+                <option value="业务述职">业务述职</option>
+                <option value="预算预测">预算预测</option>
+              </select>
+            </div>
+            <div class="dig-field span2">
+              <label>行业大脑（挂接该行业的顶级认知）</label>
+              <select id="digBrain">
+                <option value="">通用（默认）</option>
+                <option value="整装·v0.1">整装 · 战略命题版 v0.1</option>
+                <option value="整装">整装 · 经营诊断版（dia）</option>
+                <option value="链家">链家</option>
+                <option value="新房">新房</option>
+                <option value="惠居">惠居</option>
+                <option value="贝壳城市">贝壳城市</option>
+                <option value="贝好家">贝好家</option>
+              </select>
+            </div>
+            <div class="dig-field span2">
+              <label>汇报材料（粘 obsidian:// 链接 / 文件绝对路径，或直接贴正文）</label>
+              <textarea id="digMaterial" placeholder="obsidian://open?vault=...&file=...&#10;或 /Users/you/.../Q3绩效方案.md&#10;或直接把材料正文贴在这里"></textarea>
+            </div>
           </div>
           <div class="dig-row">
             <span class="dig-hint" id="digSetupHint"></span>
